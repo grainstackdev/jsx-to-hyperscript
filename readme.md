@@ -1,4 +1,4 @@
-# jsx-convert
+# jsx-transform-modern-cli
 
 A CLI tool for converting JSX files into standard JS.
 
@@ -9,7 +9,9 @@ This script will not transform code inside a prop's value. It ignores the conten
 Usage:
 
 ```
-jsx-convert <glob> [--write] [--factory='h']
+npx jsx-convert <glob> [--write] [--factory='h']
+or
+node ./node_modules/jsx-transform-modern-cli/src/index.mjs <glob> [--write] [--factory='h']
 ```
 
 Some examples of what `<glob>` can be:
