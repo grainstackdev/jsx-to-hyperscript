@@ -4,7 +4,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "jsx-transform-modern-cli": "src/jsx-convert.mjs"
+    "jsx-transform-modern-cli": "src/jsx-transform-modern-cli.mjs"
   },
   "dependencies": {
     "glob": "^8.1.0",
