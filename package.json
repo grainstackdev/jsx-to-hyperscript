@@ -1,6 +1,6 @@
 {
   "name": "jsx-convert",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "bin": {
     "jsx-convert": "src/jsx-convert.mjs"
