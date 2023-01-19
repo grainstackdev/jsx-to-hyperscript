@@ -4,5 +4,10 @@
   "license": "MIT",
   "bin": {
     "jsx-convert": "src/jsx-convert.mjs"
+  },
+  "dependencies": {
+    "glob": "^8.1.0",
+    "jsx-transform": "^2.4.1",
+    "minimist": "^1.2.7"
   }
 }
