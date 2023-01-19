@@ -268,7 +268,7 @@ function* htmlContextEntryAndExit(str) {
       const htmlEnded = endHtml?.index === match?.index
       if (htmlStarted && !htmlEnded) {
         // if (stack.length === 0) {
-          yield {match: match[0], i, type: 'entry', stack: stack.length}
+        yield {match: match[0], i, type: 'entry', stack: stack.length}
         // }
         // push
         stack.push(null)
@@ -277,7 +277,7 @@ function* htmlContextEntryAndExit(str) {
         // pop
         stack.pop()
         // if (stack.length === 0) {
-          yield {match: match[0], i, type: 'exit', stack: stack.length}
+        yield {match: match[0], i, type: 'exit', stack: stack.length}
         // }
       }
       if (htmlEnded && htmlStarted) {
@@ -458,19 +458,37 @@ function* getAttributeNames(str) {
 // <button checked id="send-button" className="button" onInput={send} disabled>
 //  ^
 
-function normalizeAttributeNames(html) {
-  // for (const tagData of htmlContextEntryAndExit(html)) {
-  //   const tag = tagData.match
-  //   const attrs = Array.from(getAttributeNames(tag))
-  //   console.log('tagData.match', tagData.match)
-  //   console.log('attrs', attrs)
-  //   for (const attr of attrs) {
-  //     if (tag) {
-  //       const a = tag.slice(attr.i, attr.i + attr.match.length + 1)
-  //       console.log('a', a)
-  //     }
-  //   }
-  // }
+// function normalizeAttributeNames(html) {
+//   for (const tagData of htmlContextEntryAndExit(html)) {
+//     const tag = tagData.match
+//     const attrs = Array.from(getAttributeNames(tag))
+//     console.log('tagData.match', tagData.match)
+//     console.log('attrs', attrs)
+//     for (const attr of attrs) {
+//       if (tag) {
+//         const a = tag.slice(attr.i, attr.i + attr.match.length + 1)
+//         console.log('a', a)
+//       }
+//     }
+//   }
+//   return html
+// }
+
+function escapeAttributeValues(html) {
+  html = html.replace(/(?<={).*(?=})/gs, (m) => {
+    // return `\`${m.replace(/`/g, '\\`')}\``
+    return JSON.stringify(m)
+  })
+  return html
+}
+
+function unescapeAttributeValues(html) {
+  html = html.replace(/(?<={).*(?=})/gs, (objContents) => {
+    return objContents.replace(/(?<=[:])(.*)(?=(,|$))/gs, (value) => {
+      // return value.replace(/\\`/g, '`').replace(/`/g, '')
+      return JSON.parse(value)
+    })
+  })
   return html
 }
 
@@ -509,13 +527,13 @@ function transform(str) {
 
 function _transform(str) {
   // console.log('str', str)
-  str = normalizeAttributeNames(str)
+  str = escapeAttributeValues(str)
   let output = jsx.fromString(str, {
     factory,
   })
   output = output.replace(/\/\/# sourceMappingURL.*$/m, "")
   output = output.replace(/\n\n\n$/, "")
-  return output
+  return unescapeAttributeValues(output)
 }
 
 function replaceReact(str) {
