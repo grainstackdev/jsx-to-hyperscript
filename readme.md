@@ -34,6 +34,12 @@ const test = (
   <div>
     <button onClick={() => console.log('click')}/>
     <Component />
+    <Component props={'asda'}/>
+    <>
+      <span/>
+      <span/>
+      <span/>
+    </>
   </div>
 )
 ```
@@ -41,14 +47,14 @@ const test = (
 Output:
 
 ```js
-// Instaces of React are transform as well
+function Fragment_94(_, children) {
+  return () => children
+}
+// Instaces of h are transform as well
 import h from 'hyperscript'
 
-const Component = () => (h('div'))
+const Component = () => (h('div', null, []))
 const test = (
-  h('div', null, [
-    h('button', {onClick: () => console.log('click')}),
-    Component()
-  ])
+  h('div', null, [h('button', {onClick: () => console.log('click')}, []), Component(null), Component({props: 'asda'}), Fragment_94(h('span', null, []), h('span', null, []), h('span', null, []))])
 )
 ```

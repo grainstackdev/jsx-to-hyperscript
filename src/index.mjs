@@ -1,565 +1,528 @@
-import glob from "glob"
-import fs from "fs"
-import jsx from "jsx-transform"
-import minimist from 'minimist'
+import jsTokens from "js-tokens"
+import standardTags from "html-tags"
 
-const args = minimist(process.argv.slice(2))
-const pattern = args._[0]
-const writeFlag = args.write
-const factory = args.factory || 'h'
+const rand = Math.random().toString().slice(-2)
 
-// function transform(str) {
-//   let lines = str.split("\n")
-//
-//   const pairs /*: Array<{line: number, col: number}>*/ = []
-//   const stack = []
-//
-//   let insideHtmlTag = false
-//   let insideJsx = false
-//   for (let i = 0; i < lines.length; i++) {
-//     const line = lines[i]
-//     let htmlOpened = /html.*`/.test(line)
-//     if (htmlOpened) {
-//       insideHtmlTag = true
-//       // console.log('insideHtmlTag', insideHtmlTag)
-//     }
-//     if (insideHtmlTag && /(?<!\\)`/.test(line) && !htmlOpened) {
-//       insideHtmlTag = false
-//       // console.log('insideHtmlTag', insideHtmlTag)
-//     }
-//
-//     if (!insideHtmlTag) {
-//       let opened = false
-//       // const
-//       // const isInRegexp = (/\/.*<.*\//).test(line)
-//       // const isInString = (/("|').*<.*("|')/).test(line)
-//       // if (!insideJsx && line.includes("<") && !isInRegexp && !isInString) {
-//       const tagOpened = (/(=|:)([^<=:>]*)<[a-zA-Z]/).test(line)
-//       // console.log('line', line)
-//       // console.log('tagOpened', tagOpened)
-//       if (!insideJsx && tagOpened) {
-//         insideJsx = true
-//         opened = true
-//       }
-//
-//       if (insideJsx) {
-//         const opens = line.match(/<(?!\/)/g)?.length ?? 0
-//         const closes =
-//           (line.match(/\/>/g)?.length ?? 0) +
-//           (line.match(/<\/(?!>)/g)?.length ?? 0)
-//
-//         let count = opens - closes
-//
-//         if (count > 0) {
-//           while (count > 0) {
-//             stack.push(null)
-//             count--
-//           }
-//         } else {
-//           while (count < 0) {
-//             stack.pop()
-//             count++
-//           }
-//         }
-//       }
-//
-//       if (insideJsx && stack.length === 0) {
-//         if (opened) {
-//           // single line jsx:
-//           const start = line.indexOf("<")
-//           const end = line.indexOf(">")
-//           pairs.push([
-//             { line: i, col: start },
-//             { line: i, col: end + 1 },
-//           ])
-//         }
-//         insideJsx = false
-//       }
-//     }
-//
-//     const lastPair = pairs[pairs.length - 1] ?? [null, null]
-//     if (insideJsx && lastPair.length === 2) {
-//       const start = line.indexOf("<")
-//       pairs.push([{ line: i, col: start }])
-//     } else if (!insideJsx && lastPair.length === 1) {
-//       const end = line.indexOf(">")
-//       lastPair.push({ line: i, col: end + 1 })
-//     }
-//
-//     // console.log('line', line)
-//     // console.log('pairs[pairs.length - 1]', pairs[pairs.length - 1])
-//   }
-//
-//   // console.log('pairs', pairs)
-//
-//   const jsxSections = []
-//   for (const pair of pairs) {
-//     if (pair[0].line === pair[1].line) {
-//       // single line jsx:
-//       jsxSections.push(lines[pair[0].line].slice(pair[0].col, pair[1].col))
-//       continue
-//     }
-//     const jsxLines = lines.slice(pair[0].line, pair[1].line + 1)
-//     const endIndex =
-//       jsxLines
-//         .map((line, i) => (i < jsxLines.length - 1 ? line.length : 0))
-//         .reduce((acc, cur) => acc + cur, 0) + pair[1].col + (jsxLines.length - 1)
-//     const joinedLines = jsxLines.join("\n")
-//     jsxSections.push(joinedLines.slice(pair[0].col, endIndex))
-//   }
-//
-//   console.log('jsxSections', jsxSections)
-//   const hCode = jsxSections.map(_transform)
-//   console.log("hCode", hCode)
-//
-//   const sections = []
-//   for (let i = 0; i < pairs.length; i++) {
-//     const prevPair = pairs[i - 1]
-//     const pair = pairs[i]
-//
-//     const prevLine = prevPair?.[1]?.line ?? 0
-//     const currentLine = pair[0].line
-//
-//     const prevLineStart = prevPair?.[1]?.col ?? 0
-//
-//     const normalLines = lines.slice(prevLine, currentLine + 1)
-//     const endIndex = normalLines
-//       .map((line, i) => (i < normalLines.length - 1 ? line.length : 0))
-//       .reduce((acc, cur) => acc + cur, 0) + pair[0].col + (normalLines.length - 1)
-//     const joinedLines = normalLines.join("\n")
-//     sections.push(joinedLines.slice(prevLineStart, endIndex))
-//   }
-//
-//   // last line:
-//   const lastLine = pairs?.[pairs.length - 1]?.[1]?.line ?? 0
-//   const lastLineEnd = pairs?.[pairs.length - 1]?.[1]?.col ?? 0
-//   const joinedLines = lines.slice(lastLine).join('\n')
-//   sections.push(joinedLines.slice(lastLineEnd))
-//   // console.log("sections", sections)
-//
-//   const final = []
-//   let argIndex = 0;
-//   for (let i = 0; i < sections.length; i++) {
-//     final.push(sections[i])
-//     final.push(hCode[argIndex])
-//     argIndex++
-//   }
-//
-//   return final.join('')
-// }
+// const a = html`<div/>`
+// const b = (<div/>)
+// ^    ^^^^^^^
+//                 ^
 
-function* get(str) {
-  let i = 0
-  let remainder = str
-  while (remainder) {
-    console.log('remainder', remainder)
-    // const matches = remainder.match(/<.*>/)
-    const matches = remainder.match(/<[a-zA-Z_][a-zA-Z_0-9-]*>/)
-    if (matches) {
-      const index = matches.index
-      remainder = remainder.slice(index + matches[0].length)
-      i = i + index
-      yield i
-    } else {
-      remainder = ''
+function splitTagEnds(tokens) {
+  const out = []
+  let i = -1
+  for (const token of tokens) {
+    i++
+
+    if (
+      token.type === "RegularExpressionLiteral" &&
+      /\/.*>/.test(token.value) &&
+      !token.closed
+    ) {
+      const prevToken = tokens[i - 1]
+      if (prevToken.type === "Punctuator" && prevToken.value === "<") {
+        // Possible matches:
+        // /div>
+        // />
+        // />);
+        const match = token.value.match(/\/.*>/)
+        const extra = token.value.slice(match[0].length)
+
+        const extraTokens = Array.from(jsTokens(extra))
+
+        out.pop()
+        if (match[0] === "/>") {
+          // </>
+          out.push({ type: "HtmlEnd", value: `</Fragment_${rand}>` })
+        } else {
+          // </match0>
+          out.push({ type: "HtmlEnd", value: prevToken.value + match[0] })
+        }
+        extraTokens.forEach((a) => out.push(a))
+
+        continue
+      }
     }
+
+    out.push(token)
   }
+  return out
 }
 
+function findClosingBrace(tokens) {
+  const validPunctuators = ["=", "{", "}", "<", "/", ">", " ", "\n"]
 
-// Which context started at which index?
-function* htmlContextEntryAndExit(str) {
+  const stackBrace = []
+
   let i = 0
-  let remainder = str
+  for (const token of tokens) {
+    if (token.type === "Punctuator" && token.value === "}") {
+      stackBrace.pop()
+    }
 
-  let inRegexp = false
-  let inSingleQuote = false
-  let inDoubleQuote = false
-  let inBackTick = false
-  let inParen = false
-  let inBrace = false
-  let inSingleComment = false
-  let inBlockComment = false
-  let inHtml = false
-
-  const stack = []
-
-  while (remainder) {
-    // console.log('remainder', remainder)
-    // console.log('inRegexp', inRegexp)
-    // console.log('inSingleQuote', inSingleQuote)
-    // console.log('inDoubleQuote', inDoubleQuote)
-    // console.log('inBackTick', inBackTick)
-    // console.log('inParen', inParen)
-    // console.log('inBrace', inBrace)
-    // console.log('inSingleComment', inSingleComment)
-    // console.log('inBlockComment', inBlockComment)
-    // console.log('inHtml', inHtml)
-
-    const inStringLike = inRegexp || inSingleQuote || inDoubleQuote || inBackTick
-    const inComment = inSingleComment || inBlockComment
-
-    // console.log('inStringLike', inStringLike)
-    // console.log('inComment', inComment)
-
-    const nextRegexp = !inComment && (!inStringLike || inRegexp) && remainder.match(/(?<!\/)\/(?!\/)/)
-    const nextSingleQuote = !inComment && (!inStringLike || inSingleQuote) && remainder.match(/'/)
-    const nextDoubleQuote = !inComment && (!inStringLike || inDoubleQuote) && remainder.match(/"/)
-    const nextBackTick = !inComment && (!inStringLike || inBackTick) && remainder.match(/`/)
-    const nextParen = !inComment && !inStringLike && remainder.match(/(\(|\))/)
-    const nextBrace = !inComment && !inStringLike && remainder.match(/({|})/)
-    const nextSingleComment = !inComment && !inStringLike && remainder.match(/\/\//) || (inSingleComment && remainder.match(/\n/))
-    const nextBlockComment = !inComment && !inStringLike && remainder.match(/\/\*/) || (inBlockComment && remainder.match(/\*\//))
-///////////////////////////////////      \s*
-    const htmlTag = remainder.match(/<\/?[a-zA-Z_][a-zA-Z_0-9-]*\s*([a-zA-Z_][a-zA-Z_0-9-]*=?.*?\s*\n?)*(?<!=)>/s)
-    let startHtml = !htmlTag?.[0]?.startsWith('</') ? htmlTag : null
-    let endHtml = (htmlTag?.[0]?.startsWith('</') || htmlTag?.[0]?.endsWith('/>')) ? htmlTag : null
-    startHtml = !inComment && !inStringLike && startHtml
-    endHtml = !inComment && !inStringLike && endHtml
-    // const startHtml = !inComment && !inStringLike && remainder.match(/<[a-zA-Z_][a-zA-Z_0-9-]*\s*.*?(?<!=)>/s)
-    // const endHtml = !inComment && !inStringLike && (remainder.match(/<([a-zA-Z_])+\s*\/>/s) ?? remainder.match(/<\/\s*([a-zA-Z_])+>/s))
-    const startHtmlIndex = (startHtml?.index ?? 0)
-    const endHtmlIndex = (endHtml?.index ?? 0)
-    const nextHtml = !inComment && !inStringLike && startHtmlIndex < endHtmlIndex ? (startHtml ?? endHtml) : (endHtml ?? startHtml)
-
-    // console.log('nextRegexp.index', nextRegexp?.index)
-    // console.log('startHtml', startHtml?.index)
-    // console.log('endHtml', endHtml?.index)
-    // console.log('nextHtml?.index', nextHtml?.index)
-
-    const matches = [
-      nextRegexp,
-      nextSingleQuote,
-      nextDoubleQuote,
-      nextBackTick,
-      nextParen,
-      nextBrace,
-      nextSingleComment,
-      nextBlockComment,
-      nextHtml,
-    ].filter(a => !!a)
-
-    matches.sort((a, b) => {
-      const aIndex = a?.index ?? 0
-      const bIndex = b?.index ?? 0
-      if (aIndex < bIndex) {
+    const atGlobal = stackBrace.length === 0
+    if (atGlobal) {
+      if (
+        !(
+          token.type === "IdentifierName" ||
+          token.type === "StringLiteral" ||
+          token.type === "WhiteSpace" ||
+          token.type === "LineTerminatorSequence" ||
+          token.type === "MultiLineComment" ||
+          token.type === "SingleLineComment" ||
+          (token.type === "Punctuator" &&
+            (validPunctuators.includes(token.value) || /\s+/.test(token.value)))
+        )
+      ) {
+        // An invalid token was found at the global level between the tag start and end,
+        // so this is not an HTML tag.
         return -1
       }
-      if (bIndex < aIndex) {
-        return 1
-      }
-
-      if (a[0] === '/' && b[0] === '/*') {
-        return 1
-      } else if (b[0] === '/' && a[0] === '/*') {
-        return -1
-      }
-
-      return 0
-    })
-
-    // console.log('matches', matches)
-
-    const match = matches[0]
-
-    if (match) {
-      i += match.index
-      const htmlStarted = startHtml?.index === match?.index
-      const htmlEnded = endHtml?.index === match?.index
-      if (htmlStarted && !htmlEnded) {
-        // if (stack.length === 0) {
-        yield {match: match[0], i, type: 'entry', stack: stack.length}
-        // }
-        // push
-        stack.push(null)
-      }
-      if (htmlEnded && !htmlStarted) {
-        // pop
-        stack.pop()
-        // if (stack.length === 0) {
-        yield {match: match[0], i, type: 'exit', stack: stack.length}
-        // }
-      }
-      if (htmlEnded && htmlStarted) {
-        yield {match: match[0], i, type: 'singular', stack: stack.length}
-      }
-
-      // console.log('match', match)
-      // console.log('match[0]', match[0], i)
-      // console.log('match.index', match.index + match[0].length)
-      // console.log('startHtml', startHtml?.index, startHtml === match)
-      // console.log('endHtml', endHtml?.index, endHtml === match)
-
-      remainder = remainder.slice(match.index + match[0].length)
-      i += match[0].length
-
-      if (nextRegexp === match) inRegexp = !inRegexp
-      if (nextSingleQuote === match) inSingleQuote = !inSingleQuote
-      if (nextDoubleQuote === match) inDoubleQuote = !inDoubleQuote
-      if (nextBackTick === match) inBackTick = !inBackTick
-      if (nextParen === match) inParen = !inParen
-      if (nextBrace === match) inBrace = !inBrace
-      if (nextSingleComment === match) inSingleComment = !inSingleComment
-      if (nextBlockComment === match) inBlockComment = !inBlockComment
-      if (nextHtml === match) inHtml = !inHtml
-    } else {
-      remainder = ''
     }
+
+    if (token.type === "Punctuator" && token.value === ">" && atGlobal) {
+      return i
+    }
+    if (token.type === "Punctuator" && token.value === "/>" && atGlobal) {
+      return i
+    }
+
+    if (token.type === "Punctuator" && token.value === "{") {
+      stackBrace.push(true)
+    }
+
+    i++
   }
+
+  return -1
 }
 
-function* getAttributeNames(str) {
+function findTagEnd(tokens) {
+  const validPunctuators = ["=", "{", "}", "<", "/", ">", " ", "\n"]
+
+  const stackBrace = []
+
   let i = 0
-  let remainder = str
+  for (const token of tokens) {
+    if (token.type === "Punctuator" && token.value === "}") {
+      stackBrace.pop()
+    }
 
-  let inRegexp = false
-  let inSingleQuote = false
-  let inDoubleQuote = false
-  let inBackTick = false
-  let inParen = false
-  let inBrace = false
-  let inSingleComment = false
-  let inBlockComment = false
+    const atGlobal = stackBrace.length === 0
 
-  const stack = []
-
-  while (remainder) {
-    // console.log('remainder', remainder)
-    // console.log('inRegexp', inRegexp)
-    // console.log('inSingleQuote', inSingleQuote)
-    // console.log('inDoubleQuote', inDoubleQuote)
-    // console.log('inBackTick', inBackTick)
-    // console.log('inParen', inParen)
-    // console.log('inBrace', inBrace)
-    // console.log('inSingleComment', inSingleComment)
-    // console.log('inBlockComment', inBlockComment)
-
-    const inStringLike = inRegexp || inSingleQuote || inDoubleQuote || inBackTick
-    const inComment = inSingleComment || inBlockComment
-    const atGlobal = !inRegexp &&
-      !inSingleQuote &&
-      !inDoubleQuote &&
-      !inBackTick &&
-      !inParen &&
-      !inBrace &&
-      !inSingleComment &&
-      !inBlockComment
-
-    // console.log('inStringLike', inStringLike)
-    // console.log('inComment', inComment)
-
-    const nextRegexp = !inComment && (!inStringLike || inRegexp) && remainder.match(/(?<!\/)\/(?!\/)/)
-    const nextSingleQuote = !inComment && (!inStringLike || inSingleQuote) && remainder.match(/'/)
-    const nextDoubleQuote = !inComment && (!inStringLike || inDoubleQuote) && remainder.match(/"/)
-    const nextBackTick = !inComment && (!inStringLike || inBackTick) && remainder.match(/`/)
-    const nextParen = !inComment && !inStringLike && remainder.match(/(\(|\))/)
-    const nextBrace = !inComment && !inStringLike && remainder.match(/({|})/)
-    const nextSingleComment = !inComment && !inStringLike && remainder.match(/\/\//) || (inComment && remainder.match(/\n/))
-    const nextBlockComment = !inComment && !inStringLike && remainder.match(/\/\*/) || (inComment && remainder.match(/\*\/\//))
-    let nextAttribute = atGlobal && remainder.match(/(?<!<\/?[^ ]*)[^<"{} =\n>]+/)
-    // console.log('remainder', remainder)
-    // console.log('atGlobal', atGlobal)
-    // console.log('nextAttribute', nextAttribute)
-
-
-
-    // console.log('nextDoubleQuote', nextDoubleQuote)
-
-
-    // console.log('nextRegexp.index', nextRegexp?.index)
-    // console.log('startHtml', startHtml?.index)
-    // console.log('endHtml', endHtml?.index)
-    // console.log('nextHtml?.index', nextHtml?.index)
-
-    const matches = [
-      nextRegexp,
-      nextSingleQuote,
-      nextDoubleQuote,
-      nextBackTick,
-      nextParen,
-      nextBrace,
-      nextSingleComment,
-      nextBlockComment,
-      nextAttribute
-    ].filter(a => !!a)
-
-    const m = [
-      nextRegexp,
-      nextSingleQuote,
-      nextDoubleQuote,
-      nextBackTick,
-      nextParen,
-      nextBrace,
-      nextSingleComment,
-      nextBlockComment,
-      nextAttribute
-    ]
-    // console.log('m', m)
-
-    matches.sort((a, b) => {
-      const aIndex = a?.index ?? 0
-      const bIndex = b?.index ?? 0
-      if (aIndex < bIndex) {
+    if (atGlobal) {
+      if (
+        !(
+          token.type === "HtmlStart" ||
+          token.type === "HtmlEnd" ||
+          token.type === "IdentifierName" ||
+          token.type === "StringLiteral" ||
+          token.type === "WhiteSpace" ||
+          token.type === "LineTerminatorSequence" ||
+          token.type === "MultiLineComment" ||
+          token.type === "SingleLineComment" ||
+          (token.type === "Punctuator" &&
+            (validPunctuators.includes(token.value) || /\s+/.test(token.value)))
+        )
+      ) {
+        // An invalid token was found at the global level between the tag start and end,
+        // so this is not an HTML tag.
         return -1
       }
-      if (bIndex < aIndex) {
-        return 1
+    }
+
+    if (token.type === "Punctuator" && token.value === ">" && atGlobal) {
+      return i
+    }
+    if (token.type === "HtmlEnd" && atGlobal) {
+      return i
+    }
+
+    if (token.type === "Punctuator" && token.value === "{") {
+      stackBrace.push(true)
+    }
+
+    i++
+  }
+
+  return -1
+}
+
+function findBraceEnd(tokens) {
+  const stackBrace = []
+
+  let i = -1
+  for (const token of tokens) {
+    i++
+
+    if (token.type === "Punctuator" && token.value === "{") {
+      stackBrace.push(true)
+    }
+    if (token.type === "Punctuator" && token.value === "}") {
+      stackBrace.pop()
+      const atGlobal = stackBrace.length === 0
+      if (atGlobal) {
+        return i
       }
-      return 0
-    })
+    }
+  }
 
+  return -1
+}
 
-    const match = matches[0]
-    // console.log('match', match)
+function getTokens(str) {
+  const tokens = splitTagEnds(Array.from(jsTokens(str), (token) => token))
 
-    if (match) {
-      i += match.index
-      if (nextAttribute?.index === match?.index) {
-        yield {match: match[0], i}
+  // console.log('tokens', tokens)
+
+  const htmlTokens = []
+  let i = 0
+  while (i < tokens.length) {
+    const token = tokens[i]
+    const nextToken = tokens[i + 1] ?? {}
+
+    token.i = i
+
+    // console.log('raw token', token)
+    let skip = 0
+    function _skip() {
+      skip++
+      // console.log('raw token', tokens[i + skip])
+    }
+
+    // <d...>
+    // <div prop="<>"/>
+    // </>
+    // </div>
+
+    if (
+      token.type === "Punctuator" &&
+      token.value === "<" &&
+      nextToken.type === "IdentifierName"
+    ) {
+      const index = findClosingBrace(tokens.slice(i))
+
+      const hasTagEnd = index !== -1
+      if (hasTagEnd) {
+        htmlTokens.push({
+          type: "HtmlStart",
+          value: token.value + nextToken.value,
+          i
+        })
+        _skip()
+
+        // console.log('tokens[i + index - 1]', tokens[i + index - 1])
+        if (tokens[i + index - 1].value !== '/') {
+          // tokens[i + index] is a '>'
+          tokens[i + index].type = 'HtmlStartClosingBrace'
+          htmlTokens[htmlTokens.length - 1].selfClosing = false
+        } else {
+          // is self-closing
+          htmlTokens[htmlTokens.length - 1].selfClosing = true
+        }
+        // In both cases, self-closing or not, htmlStart is attached to the '>' token.
+        tokens[i + index].htmlStart = htmlTokens[htmlTokens.length - 1]
+
+      } else {
+        htmlTokens.push(tokens[i])
       }
-
-      // console.log('match[0]', match[0], i)
-
-      remainder = remainder.slice(match.index + match[0].length)
-      i += match[0].length
-
-      if (nextRegexp === match) inRegexp = !inRegexp
-      if (nextSingleQuote === match) inSingleQuote = !inSingleQuote
-      if (nextDoubleQuote === match) inDoubleQuote = !inDoubleQuote
-      if (nextBackTick === match) inBackTick = !inBackTick
-      if (nextParen === match) inParen = !inParen
-      if (nextBrace === match) inBrace = !inBrace
-      if (nextSingleComment === match) inSingleComment = !inSingleComment
-      if (nextBlockComment === match) inBlockComment = !inBlockComment
+    } else if (
+      token.type === "Punctuator" &&
+      token.value === "<" &&
+      nextToken.type === "Punctuator" &&
+      nextToken.value === ">"
+    ) {
+      // <>
+      htmlTokens.push({
+        type: "HtmlStart",
+        value: token.value + "Fragment_" + rand + nextToken.value,
+      })
+      _skip()
+    } else if (
+      token.type === "Punctuator" &&
+      token.value === "/" &&
+      nextToken.type === "Punctuator" &&
+      nextToken.value === ">"
+    ) {
+      // />
+      const pushToken = { type: "HtmlEnd", value: token.value + nextToken.value }
+      if (nextToken.htmlStart) {
+        pushToken.htmlStart = nextToken.htmlStart
+      }
+      htmlTokens.push(pushToken)
+      _skip()
+    } else if (
+      token.type === "Punctuator" &&
+      token.value === "<" &&
+      nextToken.type === "RegularExpressionLiteral" &&
+      /^\/.*>/.test(nextToken.value)
+    ) {
+      // </div>
+      htmlTokens.push({ type: "HtmlEnd", value: token.value + nextToken.value })
+      _skip()
     } else {
-      remainder = ''
+      htmlTokens.push(tokens[i])
     }
-  }
-}
 
-// .match().index
-// .match().index + match[0].length
-// yield {}
-//
-
-
-//                 f0123456789abcde
-// <button checked id="send-button" className="button" onInput={send} disabled>
-//                   ^             ^
-//                   ||------------|
-// <button checked id className onmount disabled>
-// 0       8       f012
-//                   f0
-
-// <button checked={true} id className onInput={send} disabled={true}>
-// <button checked={true} id="send-button" className="button" oninput={send} disabled={true}>
-
-
-// <button checked id="send-button" className="button" onInput={send} disabled>
-//  ^
-
-// function normalizeAttributeNames(html) {
-//   for (const tagData of htmlContextEntryAndExit(html)) {
-//     const tag = tagData.match
-//     const attrs = Array.from(getAttributeNames(tag))
-//     console.log('tagData.match', tagData.match)
-//     console.log('attrs', attrs)
-//     for (const attr of attrs) {
-//       if (tag) {
-//         const a = tag.slice(attr.i, attr.i + attr.match.length + 1)
-//         console.log('a', a)
-//       }
-//     }
-//   }
-//   return html
-// }
-
-function escapeAttributeValues(html) {
-  html = html.replace(/(?<={).*(?=})/gs, (m) => {
-    // return `\`${m.replace(/`/g, '\\`')}\``
-    return JSON.stringify(m)
-  })
-  return html
-}
-
-function unescapeAttributeValues(html) {
-  html = html.replace(/(?<={).*(?=})/gs, (objContents) => {
-    return objContents.replace(/(?<=[:])(.*)(?=(,|$))/gs, (value) => {
-      // return value.replace(/\\`/g, '`').replace(/`/g, '')
-      return JSON.parse(value)
-    })
-  })
-  return html
-}
-
-// asdjhaksjdh askjdhkasjdajsd \n (<div><span/></div>) \n askjdhasjhkd \n (<div></div>)
-//                                 ^                 ^                     ^          ^
-//                                 _transform
-//                                 h('div',null,[h('span'),h('span')])
-//                                                   ^                ^ = diff
-// asdjhaksjdh askjdhkasjdajsd \n (h('div',null,[h('span'),h('span')])) \n askjdhasjhkd \n (<div></div>)
-//                                                                                          ^          ^
-
-function transform(str) {
-  let final = str
-  let diff = 0
-  let entry = null
-  for (const context of htmlContextEntryAndExit(str)) {
-    // console.log(...Object.values(context))
-    if ((context.type === 'entry' || context.type === 'singular') && context.stack === 0) {
-      entry = context
-    }
-    if (context.stack === 0 && (context.type === 'exit' || context.type === 'singular')) {
-      const html = final.slice(entry.i + diff, context.i + context.match.length + diff)
-      const base = _transform(html)
-      const originalStart = (entry.i + diff)
-      const originalEnd = (context.i + diff) + context.match.length
-      const first = final.slice(0, originalStart)
-      const last = final.slice(originalEnd)
-      final = first + base + last
-      const difference = base.length - html.length
-      diff += difference
-    }
+    i += 1 + skip
   }
 
-  return final
+  const result = extendContext(htmlTokens)
+  console.log('result', result)
+  return result
 }
 
-function _transform(str) {
-  // console.log('str', str)
-  str = escapeAttributeValues(str)
-  let output = jsx.fromString(str, {
-    factory,
-  })
-  output = output.replace(/\/\/# sourceMappingURL.*$/m, "")
-  output = output.replace(/\n\n\n$/, "")
-  return unescapeAttributeValues(output)
+function extendContext(tokens) {
+  const stackBackTick = []
+  const stackParen = []
+  const stackBrace = []
+  const stackHtml = []
+
+  const result = []
+
+  let i = -1
+  for (const token of tokens) {
+    i++
+
+    // console.log('extend token', token)
+
+    if (token.type === "TemplateTail") {
+      stackBackTick.pop()
+    }
+    if (token.value === ")") {
+      stackParen.pop()
+    }
+    if (token.value === "}") {
+      stackBrace.pop()
+    }
+    let htmlStart
+    if (token.type === "HtmlEnd") {
+      const isSelfClosing = token.htmlStart?.selfClosing
+      if (!isSelfClosing) {
+        const popToken = stackHtml.pop()
+        htmlStart = popToken.htmlStart
+      }
+    }
+
+    const forward = {
+      ...token,
+      context: {
+        stackBackTick: stackBackTick.length,
+        stackParen: stackParen.length,
+        stackBrace: stackBrace.length,
+        stackHtml: stackHtml.length,
+      },
+    }
+    if (htmlStart) {
+      forward.htmlStart = htmlStart
+    }
+    result.push(forward)
+
+    if (token.type === "TemplateHead") {
+      stackBackTick.push(true)
+    }
+    if (token.value === "(") {
+      stackParen.push(true)
+    }
+    if (token.value === "{") {
+      stackBrace.push(true)
+    }
+    if (
+      (token.type === "HtmlStartClosingBrace" && token.value === ">")
+    ) {
+      stackHtml.push(token)
+    }
+    // if (token.type === "HtmlStart") {
+    //   stackHtml.push(token)
+    // }
+  }
+
+  return result
 }
 
-function replaceReact(str) {
+function transform(str, factory) {
+  let tokens = getTokens(str)
+  tokens = extendContext(tokens)
+
+  // console.log("tokens", tokens.slice(-100))
+
+  const transformedTokens = []
+  let startClip = null
+  let i = -1
+  for (const token of tokens) {
+    i++
+
+    if (token.context.stackHtml === 0 && token.type === "HtmlStart") {
+      startClip = i
+    }
+
+    if (
+      token.context.stackHtml === 0 &&
+      token.type === "HtmlEnd" &&
+      startClip !== null
+    ) {
+      const endClip = i + 1
+
+      const clip = tokens.slice(startClip, endClip)
+      const html = clip.map((t) => t.value).join("")
+      // const base = _transform(html, factory)
+      // const baseTokens = Array.from(jsTokens(base))
+      // baseTokens.forEach((t) => transformedTokens.push(t))
+      startClip = null
+      continue
+    }
+
+    if (startClip === null) {
+      transformedTokens.push(token)
+    }
+  }
+
+  return transformedTokens.map((t) => t.value).join("")
+}
+
+function getProps(tokens) {
+  const props = {}
+
+  let i = -1
+  for (const token of tokens) {
+    i++
+
+    const atGlobal = !token.context.stackBrace + !token.context.stackHtml
+    const equalToken = tokens[i + 1]
+    const valueToken = tokens[i + 2]
+
+    if (atGlobal) {
+      if (
+        token.type === "IdentifierName" &&
+        equalToken.type === "Punctuator" &&
+        equalToken.value === "=" &&
+        valueToken.type === "StringLiteral"
+      ) {
+        const propName = token.value
+        const propValue = valueToken.value
+        props[propName] = propValue
+      }
+      if (
+        token.type === "IdentifierName" &&
+        equalToken.type === "Punctuator" &&
+        equalToken.value === "=" &&
+        valueToken.type === "Punctuator" &&
+        valueToken.value === "{"
+      ) {
+        const propName = token.value
+        const endBraceIndex = findBraceEnd(tokens.slice(i))
+        const propValue = tokens
+          .slice(i + 3, i + endBraceIndex)
+          .map((t) => t.value)
+          .join("")
+        // const o = transform(propValue)
+        props[propName] = propValue
+      }
+    }
+  }
+
+  return props
+}
+
+// input is nested HTML in the form of tokens
+function _transform(str, factory) {
+  let tokens = getTokens(str)
+  tokens = extendContext(tokens)
+
+  let lines = ""
+  let stackOffsetBrace = 0
+
+  let i = -1
+  for (const token of tokens) {
+    i++
+
+    if (i === 0 && token.type === "HtmlStart") {
+      stackOffsetBrace = -token.context.stackBrace
+    }
+    const atGlobal = token.context.stackBrace + stackOffsetBrace === 0
+    // console.log('token', token)
+
+    if (atGlobal) {
+      if (token.type === "HtmlStart") {
+        const tagName = tokens[i].value.replace(/[<>\/]/g, "")
+        let props
+        const isFragment = tagName === `Fragment_${rand}`
+
+        let tagEndIndex
+        if (!tagName.endsWith(">")) {
+          tagEndIndex = findTagEnd(tokens.slice(i))
+          props = getProps(tokens.slice(i, i + tagEndIndex + 1))
+        } else {
+          tagEndIndex = 0
+          props = null
+        }
+        if (!Object.keys(props).length) {
+          props = null
+        }
+
+        const propsAsString = !props
+          ? "null"
+          : `{${Object.keys(props)
+              .map((p) => `${p}: ${props[p]}`)
+              .join(", ")}}`
+
+        const isStandard = standardTags.includes(tagName)
+        let line
+        if (isStandard) {
+          line = `${factory}('${tagName}', ${propsAsString}, [`
+        } else {
+          if (isFragment) {
+            line = `...${tagName}(`
+          } else {
+            line = `${tagName}(${propsAsString})`
+          }
+        }
+
+        if (lines.slice(-1) === ")") {
+          lines += ", "
+        }
+        lines += line
+      }
+      if (token.type === "Punctuator" && token.value === "{") {
+        console.log("token.context.stackHtml", token.context.stackHtml)
+      }
+      if (token.type === "HtmlEnd") {
+        const tagName = tokens[i]?.htmlStart?.value?.replace(/[<>\/]/g, "")
+        const isFragment = tagName === `Fragment_${rand}`
+
+        const isStandard = standardTags.includes(tagName)
+        if (isStandard) {
+          lines += "])"
+        } else if (isFragment) {
+          lines += ")"
+        }
+      }
+    }
+  }
+
+  return lines
+}
+
+function replaceReact(str, factory) {
   return str.replace(/(?<!\.)React/g, factory)
 }
 
-glob(pattern, {}, async (err, files) => {
-  // console.log('files', files)
-  for (const file of files) {
-    console.log('convert', file)
-    let str = fs.readFileSync(file, {encoding: 'utf8'})
-    // const standard = prettier.format(str, {})
-    // console.log('standard', standard)
+function addFragmentFunction(str) {
+  const f = `function Fragment_${rand}(...nodes) {
+  return nodes
+}
+`
+  return f + str
+}
 
-    let out
-    if (factory !== 'React') {
-      out = replaceReact(str)
-    }
-
-    out = transform(out)
-
-    if (writeFlag) {
-      fs.writeFileSync(file, out, 'utf8')
-    } else {
-      console.log(out)
-    }
+export default function parseJsx(str, options) {
+  const factory = options.factory || "h"
+  let out
+  if (factory !== "React") {
+    out = replaceReact(str, factory)
   }
-})
+  out = transform(out, factory)
+  out = addFragmentFunction(out)
 
+  return out
+}
