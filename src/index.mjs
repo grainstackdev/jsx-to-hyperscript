@@ -283,8 +283,6 @@ function extendContext(tokens) {
 
   const result = []
 
-  console.log('tokens', tokens)
-
   let i = -1
   for (const token of tokens) {
     i++
@@ -303,8 +301,6 @@ function extendContext(tokens) {
       const isSelfClosing = token.htmlStart?.selfClosing
       if (!isSelfClosing) {
         const popToken = stackHtml.pop()
-        console.log('token', token)
-        console.log('popToken', popToken)
         htmlStart = popToken.htmlStart
       }
     }
@@ -484,7 +480,11 @@ function _transform(str, factory) {
           if (isFragment) {
             line = `[`
           } else {
-            line = `${tagName}(${propsAsString})`
+            if (propsAsString !== 'null') {
+              line = `${tagName}(${propsAsString})`
+            } else {
+              line = `${tagName}()`
+            }
           }
         }
 
@@ -545,7 +545,7 @@ export default function parseJsx(str, options) {
     out = replaceReact(str, factory)
   }
   out = transform(out, factory)
-  out = addFragmentFunction(out)
+  // out = addFragmentFunction(out)
 
   return out
 }

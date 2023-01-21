@@ -1,10 +1,10 @@
 {
-  "name": "jsx-transform-modern-cli",
+  "name": "jsx-convert",
   "version": "1.0.5",
   "license": "MIT",
   "type": "module",
   "bin": {
-    "jsx-transform-modern-cli": "src/index.mjs"
+    "jsx-convert": "src/cli.mjs"
   },
   "dependencies": {
     "glob": "^8.1.0",

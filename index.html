@@ -2,40 +2,27 @@
   <script type="module">
     import h from "https://unpkg.com/nonr/dist/hyperscript.mjs"
 
-    // const signs = [{ value: "+" }, { value: "-" }]
-    //
-    // const renderSign = (props) => {
-    //   return h("span", null, [props.value])
-    // }
-    // const Component = () => h("div", null, [])
-    // const test = h("div", { style: { color: "orange" } }, [
-    //   h(
-    //     "button",
-    //     {
-    //       onClick: () => {
-    //         console.log("send")
-    //         const el = h("div", null, [])
-    //         console.log(el)
-    //       },
-    //     },
-    //     []
-    //   ),
-    //   Component(null),
-    //   Component({ props: "asda" }),
-    //   signs.map(renderSign),
-    // ])
+    const signs = [{ value: "+" }, { value: "-" }]
 
-
-    const renderRow = () => {
-      return (
-        [h('span', null, []), h('span', null, [])]
-      )
+    const renderSign = (props) => {
+      return h("span", null, [props.value])
     }
 
-    const test = (
-      h('div', null, [[h('span', null, []), h('span', null, []), h('span', null, [])], renderRow()])
-    )
-
+    const Component = () => h("div", null, [])
+    const test = h("div", { style: { color: "orange" } }, [
+      Component(),
+      h(
+        "button",
+        {
+          onClick: () => {
+            const el = h("div", null, [])
+            console?.log(el)
+          },
+        },
+        []
+      ),
+      signs.map(renderSign),
+    ])
 
     // console.log("signs.map(renderSign)", signs.map(renderSign))
 

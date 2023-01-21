@@ -1,7 +1,7 @@
 import fs from 'fs'
 import glob from "glob";
 import minimist from "minimist";
-import parseJsx from './index.mjs'
+import jsxConvert from './index.mjs'
 
 const args = minimist(process.argv.slice(2))
 const pattern = args._[0]
@@ -14,7 +14,7 @@ glob(pattern, {}, async (err, files) => {
     let str = fs.readFileSync(file, { encoding: "utf8" })
     // const standard = prettier.format(str, {})
 
-    const out = parseJsx(str, {
+    const out = jsxConvert(str, {
       factory
     })
 
