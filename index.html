@@ -2,29 +2,97 @@
   <script type="module">
     import h from "https://unpkg.com/nonr/dist/hyperscript.mjs"
 
-    const signs = [{ value: "+" }, { value: "-" }]
-
-    const renderSign = (props) => {
-      return h("span", null, [props.value])
-    }
-
-    const Component = () => h("div", null, [])
-    const test = h("div", { style: { color: "orange" } }, [
-      Component(),
-      h(
-        "button",
-        {
-          onClick: () => {
-            const el = h("div", null, [])
-            console?.log(el)
-          },
-        },
-        []
-      ),
-      signs.map(renderSign),
-    ])
-
-    // console.log("signs.map(renderSign)", signs.map(renderSign))
+    const test = () =>
+      h("div", { id: "form", className: "appear-default" }, [
+        h("div", null, [
+          h("div", { className: "flex field text-field" }, [
+            h("span", null, []),
+            h(
+              "textarea",
+              {
+                id: "message-input",
+                className: "textarea",
+                rows: "8",
+                maxLength: "2000",
+                onInput: updateOutput,
+                onKeyDown: (event) => checkEnter(event),
+              },
+              []
+            ),
+          ]),
+          h("div", { className: "flex row spaced radio-field" }, [
+            h("div", null, [
+              h(
+                "input",
+                {
+                  checked: true,
+                  type: "radio",
+                  id: "private-radio",
+                  name: "privacy",
+                  value: "private",
+                  onChange: updatePrivacy,
+                },
+                []
+              ),
+              h("span", null, []),
+            ]),
+            h("div", null, [
+              h(
+                "input",
+                {
+                  disabled: true,
+                  type: "radio",
+                  id: "public-radio",
+                  name: "privacy",
+                  value: "public",
+                  onChange: updatePrivacy,
+                },
+                []
+              ),
+              h("span", null, []),
+            ]),
+          ]),
+          h("div", { className: "flex field text-field" }, [
+            h("span", null, []),
+            h(
+              "input",
+              {
+                id: "password-input",
+                type: "text",
+                minLength: "3",
+                onInput: updateOutput,
+                onKeyDown: (e) => checkEnter(e),
+              },
+              []
+            ),
+          ]),
+        ]),
+        h("div", { className: "flex field text-field" }, [
+          h("span", null, []),
+          h("div", { className: "flex row" }, [
+            h(
+              "textarea",
+              {
+                id: "server-value",
+                className: "textarea",
+                style: "width: 100%",
+                rows: "9",
+                disabled: true,
+              },
+              []
+            ),
+          ]),
+        ]),
+        h("div", { id: "send-row", className: "flex row spaced" }, [
+          h("div", { style: "flex: 1" }, []),
+          h("span", { id: "send-row-ip-label", style: "opacity: 0.3" }, []),
+          h(
+            "button",
+            { id: "send-button", className: "button", onClick: send },
+            []
+          ),
+        ]),
+      ])
 
     document.body.appendChild(test)
 

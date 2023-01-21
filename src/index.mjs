@@ -422,8 +422,10 @@ function getProps(tokens, factory) {
           .slice(i + 3, i + endBraceIndex)
           .map((t) => t.value)
           .join("")
-        const o = transform(propValue, factory)
-        props[propName] = o
+        if (propValue) {
+          const o = transform(propValue, factory)
+          props[propName] = o
+        }
       }
     }
   }
