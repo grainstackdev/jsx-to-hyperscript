@@ -1,46 +1,31 @@
 <body>
   <script type="module">
-    // Instaces of React are transform as well
-    // import React from "hyperscript"
-
-    // const signs = [{ value: "+" }, { value: "-" }]
-    //
-    // const renderSign = (props) => {
-    //   return (
-    //     <span>{props}</span>
-    //   )
-    // }
-    // const test = (
-    //   <div style={{color: 'orange'}}>
-    //     <button onClick={() => {<div/>}} />
-    //     <Component />
-    //     <Component props={"asda"} />
-    //     {signs.map(renderSign)}
-    //   </div>
-    // )
-
     import h from "https://unpkg.com/nonr/dist/hyperscript.mjs"
-
-    function Fragment_26(...nodes) {
-      return nodes
-    }
-    // Instaces of h are transform as well
 
     const signs = [{ value: "+" }, { value: "-" }]
 
     const renderSign = (props) => {
-      return [h("span", null, []), h("span", null, [])]
+      return h("span", null, [props.value])
     }
-
     const Component = () => h("div", null, [])
-    const test = h("div", null, [
-      h("button", { onClick: () => console.log("click") }, []),
+    const test = h("div", { style: { color: "orange" } }, [
+      h(
+        "button",
+        {
+          onClick: () => {
+            console.log("send")
+            const el = h("div", null, [])
+            console.log(el)
+          },
+        },
+        []
+      ),
       Component(null),
       Component({ props: "asda" }),
-      signs.map(renderSign)
+      signs.map(renderSign),
     ])
 
-    console.log('signs.map(renderSign)', signs.map(renderSign))
+    console.log("signs.map(renderSign)", signs.map(renderSign))
 
     document.body.appendChild(test)
 

@@ -3,11 +3,6 @@ import standardTags from "html-tags"
 
 const rand = Math.random().toString().slice(-2)
 
-// const a = html`<div/>`
-// const b = (<div/>)
-// ^    ^^^^^^^
-//                 ^
-
 function splitTagEnds(tokens) {
   const out = []
   let i = -1
@@ -49,7 +44,7 @@ function splitTagEnds(tokens) {
   return out
 }
 
-function findClosingBrace(tokens) {
+function findClosingHtmlBrace(tokens) {
   const validPunctuators = ["=", "{", "}", "<", "/", ">", " ", "\n"]
 
   const stackBrace = []
@@ -89,6 +84,13 @@ function findClosingBrace(tokens) {
 
     if (token.type === "Punctuator" && token.value === "{") {
       stackBrace.push(true)
+    }
+
+    if (
+      token.type === "Punctuator" &&
+      (token.value === "{" || token.value === "}")
+    ) {
+      token.insideOpeningTag = true
     }
 
     i++
@@ -153,7 +155,7 @@ function findTagEnd(tokens) {
   return -1
 }
 
-function findBraceEnd(tokens) {
+function findCurlyBraceEnd(tokens) {
   const stackBrace = []
 
   let i = -1
@@ -178,8 +180,6 @@ function findBraceEnd(tokens) {
 function getTokens(str) {
   const tokens = splitTagEnds(Array.from(jsTokens(str), (token) => token))
 
-  // console.log('tokens', tokens)
-
   const htmlTokens = []
   let i = 0
   while (i < tokens.length) {
@@ -188,11 +188,9 @@ function getTokens(str) {
 
     token.i = i
 
-    // console.log('raw token', token)
     let skip = 0
     function _skip() {
       skip++
-      // console.log('raw token', tokens[i + skip])
     }
 
     // <d...>
@@ -205,7 +203,7 @@ function getTokens(str) {
       token.value === "<" &&
       nextToken.type === "IdentifierName"
     ) {
-      const index = findClosingBrace(tokens.slice(i))
+      const index = findClosingHtmlBrace(tokens.slice(i))
 
       const hasTagEnd = index !== -1
       if (hasTagEnd) {
@@ -216,7 +214,6 @@ function getTokens(str) {
         })
         _skip()
 
-        // console.log('tokens[i + index - 1]', tokens[i + index - 1])
         if (tokens[i + index - 1].value !== "/") {
           // tokens[i + index] is a '>'
           tokens[i + index].type = "HtmlStartClosingBrace"
@@ -275,7 +272,6 @@ function getTokens(str) {
   }
 
   const result = extendContext(htmlTokens)
-  // console.log('result', result)
   return result
 }
 
@@ -290,8 +286,6 @@ function extendContext(tokens) {
   let i = -1
   for (const token of tokens) {
     i++
-
-    // console.log('extend token', token)
 
     if (token.type === "TemplateTail") {
       stackBackTick.pop()
@@ -380,7 +374,7 @@ function transform(str, factory) {
   return transformedTokens.map((t) => t.value).join("")
 }
 
-function getProps(tokens) {
+function getProps(tokens, factory) {
   const props = {}
 
   let stackBraceOffset = 0
@@ -420,13 +414,13 @@ function getProps(tokens) {
         valueToken.value === "{"
       ) {
         const propName = token.value
-        const endBraceIndex = findBraceEnd(tokens.slice(i))
+        const endBraceIndex = findCurlyBraceEnd(tokens.slice(i))
         const propValue = tokens
           .slice(i + 3, i + endBraceIndex)
           .map((t) => t.value)
           .join("")
-        // const o = transform(propValue)
-        props[propName] = propValue
+        const o = transform(propValue, factory)
+        props[propName] = o
       }
     }
   }
@@ -450,7 +444,6 @@ function _transform(str, factory) {
       stackOffsetBrace = -token.context.stackBrace
     }
     const atGlobal = token.context.stackBrace + stackOffsetBrace === 0
-    // console.log('token', token)
 
     if (atGlobal) {
       if (token.type === "HtmlStart") {
@@ -461,7 +454,7 @@ function _transform(str, factory) {
         let tagEndIndex
         if (!tagName.endsWith(">")) {
           tagEndIndex = findTagEnd(tokens.slice(i))
-          props = getProps(tokens.slice(i, i + tagEndIndex + 1))
+          props = getProps(tokens.slice(i, i + tagEndIndex + 1), factory)
         } else {
           tagEndIndex = 0
           props = null
@@ -493,8 +486,21 @@ function _transform(str, factory) {
         }
         lines += line
       }
-      if (token.type === "Punctuator" && token.value === "{") {
-        // console.log("token.context.stackHtml", token.context.stackHtml)
+      if (
+        token.type === "Punctuator" &&
+        token.value === "{" &&
+        !token.insideOpeningTag
+      ) {
+        const index = findCurlyBraceEnd(tokens.slice(i))
+        const code = tokens
+          .slice(i + 1, i + index)
+          .map((t) => t.value)
+          .join("")
+
+        if (lines.slice(-1) === ")") {
+          lines += ", "
+        }
+        lines += code
       }
       if (token.type === "HtmlEnd") {
         const tagName = tokens[i]?.htmlStart?.value?.replace(/[<>\/]/g, "")
