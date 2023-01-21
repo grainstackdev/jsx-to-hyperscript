@@ -27,19 +27,26 @@ Input:
 
 ```jsx
 // Instaces of React are transform as well
-import React from 'hyperscript'
+import React from "hyperscript"
 
-const Component = () => (<div/>)
+const signs = [{ value: "+" }, { value: "-" }]
+
+const renderSign = (props) => {
+  return (
+    <span>{props.value}</span>
+  )
+}
+
+const Component = () => (<div></div>)
 const test = (
-  <div>
-    <button onClick={() => console.log('click')}/>
+  <div style={{color: 'orange'}}>
+    <button onClick={() => {
+      const el = <div/>
+      console?.log(el)
+    }} />
     <Component />
-    <Component props={'asda'}/>
-    <>
-      <span/>
-      <span/>
-      <span/>
-    </>
+    <Component prop={"asda"} />
+    {signs.map(renderSign)}
   </div>
 )
 ```

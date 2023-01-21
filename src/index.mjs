@@ -283,6 +283,8 @@ function extendContext(tokens) {
 
   const result = []
 
+  console.log('tokens', tokens)
+
   let i = -1
   for (const token of tokens) {
     i++
@@ -301,6 +303,8 @@ function extendContext(tokens) {
       const isSelfClosing = token.htmlStart?.selfClosing
       if (!isSelfClosing) {
         const popToken = stackHtml.pop()
+        console.log('token', token)
+        console.log('popToken', popToken)
         htmlStart = popToken.htmlStart
       }
     }
@@ -327,6 +331,9 @@ function extendContext(tokens) {
     }
     if (token.value === "{") {
       stackBrace.push(true)
+    }
+    if (token.type === "HtmlStart" && token.value === `<Fragment_${rand}>`) {
+      stackHtml.push(token)
     }
     if (token.type === "HtmlStartClosingBrace" && token.value === ">") {
       stackHtml.push(token)
@@ -475,13 +482,13 @@ function _transform(str, factory) {
           line = `${factory}('${tagName}', ${propsAsString}, [`
         } else {
           if (isFragment) {
-            line = `...${tagName}(`
+            line = `[`
           } else {
             line = `${tagName}(${propsAsString})`
           }
         }
 
-        if (lines.slice(-1) === ")") {
+        if (lines.slice(-1) === ")" || lines.slice(-1) === "]") {
           lines += ", "
         }
         lines += line
@@ -497,7 +504,7 @@ function _transform(str, factory) {
           .map((t) => t.value)
           .join("")
 
-        if (lines.slice(-1) === ")") {
+        if (lines.slice(-1) === ")" || lines.slice(-1) === "]") {
           lines += ", "
         }
         lines += code
@@ -510,7 +517,7 @@ function _transform(str, factory) {
         if (isStandard) {
           lines += "])"
         } else if (isFragment) {
-          lines += ")"
+          lines += "]"
         }
       }
     }
