@@ -115,6 +115,7 @@ function findTagEnd(tokens) {
         !(
           token.type === "HtmlStart" ||
           token.type === "HtmlEnd" ||
+          token.type === "HtmlStartClosingBrace" ||
           token.type === "IdentifierName" ||
           token.type === "StringLiteral" ||
           token.type === "WhiteSpace" ||
@@ -131,7 +132,11 @@ function findTagEnd(tokens) {
       }
     }
 
-    if (token.type === "Punctuator" && token.value === ">" && atGlobal) {
+    if (
+      token.type === "HtmlStartClosingBrace" &&
+      token.value === ">" &&
+      atGlobal
+    ) {
       return i
     }
     if (token.type === "HtmlEnd" && atGlobal) {
@@ -207,14 +212,14 @@ function getTokens(str) {
         htmlTokens.push({
           type: "HtmlStart",
           value: token.value + nextToken.value,
-          i
+          i,
         })
         _skip()
 
         // console.log('tokens[i + index - 1]', tokens[i + index - 1])
-        if (tokens[i + index - 1].value !== '/') {
+        if (tokens[i + index - 1].value !== "/") {
           // tokens[i + index] is a '>'
-          tokens[i + index].type = 'HtmlStartClosingBrace'
+          tokens[i + index].type = "HtmlStartClosingBrace"
           htmlTokens[htmlTokens.length - 1].selfClosing = false
         } else {
           // is self-closing
@@ -222,7 +227,6 @@ function getTokens(str) {
         }
         // In both cases, self-closing or not, htmlStart is attached to the '>' token.
         tokens[i + index].htmlStart = htmlTokens[htmlTokens.length - 1]
-
       } else {
         htmlTokens.push(tokens[i])
       }
@@ -245,7 +249,10 @@ function getTokens(str) {
       nextToken.value === ">"
     ) {
       // />
-      const pushToken = { type: "HtmlEnd", value: token.value + nextToken.value }
+      const pushToken = {
+        type: "HtmlEnd",
+        value: token.value + nextToken.value,
+      }
       if (nextToken.htmlStart) {
         pushToken.htmlStart = nextToken.htmlStart
       }
@@ -268,7 +275,7 @@ function getTokens(str) {
   }
 
   const result = extendContext(htmlTokens)
-  console.log('result', result)
+  // console.log('result', result)
   return result
 }
 
@@ -327,14 +334,9 @@ function extendContext(tokens) {
     if (token.value === "{") {
       stackBrace.push(true)
     }
-    if (
-      (token.type === "HtmlStartClosingBrace" && token.value === ">")
-    ) {
+    if (token.type === "HtmlStartClosingBrace" && token.value === ">") {
       stackHtml.push(token)
     }
-    // if (token.type === "HtmlStart") {
-    //   stackHtml.push(token)
-    // }
   }
 
   return result
@@ -343,8 +345,6 @@ function extendContext(tokens) {
 function transform(str, factory) {
   let tokens = getTokens(str)
   tokens = extendContext(tokens)
-
-  // console.log("tokens", tokens.slice(-100))
 
   const transformedTokens = []
   let startClip = null
@@ -365,9 +365,9 @@ function transform(str, factory) {
 
       const clip = tokens.slice(startClip, endClip)
       const html = clip.map((t) => t.value).join("")
-      // const base = _transform(html, factory)
-      // const baseTokens = Array.from(jsTokens(base))
-      // baseTokens.forEach((t) => transformedTokens.push(t))
+      const base = _transform(html, factory)
+      const baseTokens = Array.from(jsTokens(base))
+      baseTokens.forEach((t) => transformedTokens.push(t))
       startClip = null
       continue
     }
@@ -383,11 +383,21 @@ function transform(str, factory) {
 function getProps(tokens) {
   const props = {}
 
+  let stackBraceOffset = 0
+  let stackHtmlOffset = 0
+
   let i = -1
   for (const token of tokens) {
     i++
 
-    const atGlobal = !token.context.stackBrace + !token.context.stackHtml
+    if (i === 0 && tokens[0].type === "HtmlStart") {
+      stackBraceOffset = -tokens[0].context.stackBrace
+      stackHtmlOffset = -tokens[0].context.stackHtml
+    }
+
+    const atGlobal =
+      token.context.stackBrace + stackBraceOffset === 0 &&
+      token.context.stackHtml + stackHtmlOffset === 0
     const equalToken = tokens[i + 1]
     const valueToken = tokens[i + 2]
 
@@ -484,7 +494,7 @@ function _transform(str, factory) {
         lines += line
       }
       if (token.type === "Punctuator" && token.value === "{") {
-        console.log("token.context.stackHtml", token.context.stackHtml)
+        // console.log("token.context.stackHtml", token.context.stackHtml)
       }
       if (token.type === "HtmlEnd") {
         const tagName = tokens[i]?.htmlStart?.value?.replace(/[<>\/]/g, "")
