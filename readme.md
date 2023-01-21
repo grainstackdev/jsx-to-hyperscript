@@ -7,7 +7,7 @@ Usage:
 ```
 npx jsx-convert <glob> [--write] [--factory='h']
 or
-node ./node_modules/jsx-transform-modern-cli/src/index.mjs <glob> [--write] [--factory='h']
+node ./node_modules/jsx-convert/src/cli.mjs <glob> [--write] [--factory='h']
 ```
 
 Some examples of what `<glob>` can be:
