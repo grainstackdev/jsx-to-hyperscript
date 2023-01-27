@@ -436,6 +436,7 @@ function extendContext(tokens) {
     // This is an escaped context. There should be no stack increases happening in here.
     const lastHtmlStart = stackHtmlStart[stackHtmlStart.length - 1]
     const inOpeningTag = !!lastHtmlStart
+    const inValueBrace = stackBrace.length - (stackHtml[stackHtml.length - 1]?.context.stackBrace ?? 0) > 0
 
     // console.log('token', token)
 
@@ -446,7 +447,7 @@ function extendContext(tokens) {
       stackParen.pop()
     }
     if (startClip === null && token.value === "}") {
-      if (!token.insideOpeningTag && !inOpeningTag && stackHtml.length > 0) {
+      if (!token.insideOpeningTag && !inOpeningTag && stackHtml.length > 0 && !inValueBrace) {
         startClipFlag = true
       }
       stackBrace.pop()
@@ -468,7 +469,7 @@ function extendContext(tokens) {
 
       if (stackHtml.length > 0) {
         // HtmlStringLiteral is seeing HtmlEnd within {} braces and starting a clip when it shouldn't
-        if (!inOpeningTag) {
+        if (!inOpeningTag && !inValueBrace) {
           startClipFlag = true
         }
       }
@@ -522,7 +523,7 @@ function extendContext(tokens) {
       stackHtmlStart.pop()
       const lastHtmlStart = stackHtmlStart[stackHtmlStart.length - 1]
       const inOpeningTag = !!lastHtmlStart
-      if (!inOpeningTag) {
+      if (!inOpeningTag && !inValueBrace) {
         startClipFlag = true
       }
       stackHtml.push(token)
