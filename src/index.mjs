@@ -685,7 +685,7 @@ function _transform(tokens, factory) {
             if (propsAsString !== "null") {
               line = `${tagName}(${propsAsString})`
             } else {
-              line = `${tagName}()`
+              line = `${tagName}({})`
             }
           }
         }

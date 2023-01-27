@@ -33,10 +33,10 @@ const renderSign = (props) => {
   )
 }
 
-const Component = () => (<div></div>)
+const Component = (props) => (<div>{props.prop}</div>)
 const test = (
   <div style={{color: 'orange'}}>
-    <Component />
+    <Component prop={true}/>
     <button onClick={() => {
       const el = <div/>
       console?.log(el)
@@ -60,7 +60,7 @@ const renderSign = (props) => {
 
 const Component = () => h("div", null, [])
 const test = h("div", { style: { color: "orange" } }, [
-  Component(),
+  Component({}),
   h(
     "button",
     {
