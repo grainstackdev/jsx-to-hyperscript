@@ -433,10 +433,8 @@ function extendContext(tokens) {
       stackParen.pop()
     }
     if (startClip === null && token.value === "}") {
-      if (!token.insideOpeningTag) {
-        if (!inOpeningTag) {
-          startClipFlag = true
-        }
+      if (!token.insideOpeningTag && !inOpeningTag && stackHtml.length > 0) {
+        startClipFlag = true
       }
       stackBrace.pop()
     }

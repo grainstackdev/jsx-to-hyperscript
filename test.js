@@ -1,24 +1,10 @@
-// Instances of h are transform as well
-import h from "hyperscript"
+// @flow
 
-const signs = [{ value: "+" }, { value: "-" }]
+app.use((req, res, next) => {
+  return res.status(404).json({
+    error: "Not Found",
+  })
+})
 
-const renderSign = (props) => {
-  return h("span", null, [props.value])
-}
-
-const Component = () => h("div", null, [])
-const test = h("div", { style: { color: "orange" } }, [
-  Component(),
-  h(
-    "button",
-    {
-      onClick: () => {
-        const el = h("div", null, [])
-        console?.log(el)
-      },
-    },
-    []
-  ),
-  signs.map(renderSign),
-])
+// $FlowFixMe
+export const handler = serverless(app)
