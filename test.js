@@ -1,22 +1,25 @@
-// Instances of React are transform as well
-import React from "hyperscript"
+// Instances of h are transform as well
+import h from "hyperscript"
 
 const signs = [{ value: "+" }, { value: "-" }]
 
 const renderSign = (props) => {
-  return (
-    <span>{props.value}</span>
-  )
+  return h("span", null, [props.value])
 }
 
-const Component = (props) => (<div>{props.prop}</div>)
-const test = (
-  <div style={{color: 'orange'}}>
-    <Component />
-    <button onClick={() => {
-      const el = <div/>
-      console?.log(el)
-    }} />
-    {signs.map(renderSign)}
-  </div>
-)
+const Component = () => h("div", null, [])
+const test = h("div", { style: { color: "orange" } }, [
+  Component({}),
+  h(
+    "button",
+    {
+      onClick: () => {
+        const el = h("div", null, [])
+        console?.log(el)
+      },
+      ...passProps,
+    },
+    []
+  ),
+  signs.map(renderSign),
+])

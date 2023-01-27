@@ -33,14 +33,17 @@ const renderSign = (props) => {
   )
 }
 
-const Component = (props) => (<div>{props.prop}</div>)
+const Component = () => (<div></div>)
 const test = (
   <div style={{color: 'orange'}}>
-    <Component prop={true}/>
-    <button onClick={() => {
-      const el = <div/>
-      console?.log(el)
-    }} />
+    <Component />
+    <button
+      onClick={() => {
+        const el = <div/>
+        console?.log(el)
+      }}
+      {...passProps}
+    />
     {signs.map(renderSign)}
   </div>
 )
@@ -68,6 +71,7 @@ const test = h("div", { style: { color: "orange" } }, [
         const el = h("div", null, [])
         console?.log(el)
       },
+      ...passProps,
     },
     []
   ),

@@ -3,7 +3,11 @@ import standardTags from "html-tags"
 
 const rand = Math.random().toString().slice(-2)
 
-const stringTypes = ["StringLiteral", "NoSubstitutionTemplate", 'RegularExpressionLiteral']
+const stringTypes = [
+  "StringLiteral",
+  "NoSubstitutionTemplate",
+  "RegularExpressionLiteral",
+]
 function tokenizeStringLiteralClosed(token) {
   if (stringTypes.includes(token.type) && token.closed) {
     const beginning = token.value[0]
@@ -99,7 +103,7 @@ function splitTagEnds(tokens) {
     // }
 
     const prevToken = tokens[i - 1]
-    const isPropValue = prevToken?.value === '=' && token.value[0] === '"'
+    const isPropValue = prevToken?.value === "=" && token.value[0] === '"'
     if (stringTypes.includes(token.type) && !isPropValue) {
       let extraTokens
       if (token.closed) {
@@ -317,12 +321,12 @@ function getTokens(str) {
       htmlTokens.push({
         type: "HtmlStart",
         value: token.value + "Fragment_" + rand,
-        selfClosing: true
+        selfClosing: true,
       })
       htmlTokens.push({
         type: "HtmlStartClosingBrace",
-        value: '>',
-        htmlStart: htmlTokens[htmlTokens.length - 1]
+        value: ">",
+        htmlStart: htmlTokens[htmlTokens.length - 1],
       })
       _skip()
     } else if (
@@ -345,13 +349,16 @@ function getTokens(str) {
       token.type === "Punctuator" &&
       token.value === "<" &&
       nextToken.type === "Punctuator" &&
-      nextToken.value === '/'
+      nextToken.value === "/"
     ) {
       // </div>
       const closingIndex = findClosingHtmlBrace(tokens.slice(i))
       if (closingIndex !== -1) {
         const endTagTokens = tokens.slice(i, i + closingIndex + 1)
-        htmlTokens.push({ type: "HtmlEnd", value: endTagTokens.map(t => t.value).join('') })
+        htmlTokens.push({
+          type: "HtmlEnd",
+          value: endTagTokens.map((t) => t.value).join(""),
+        })
         endTagTokens.forEach((_, i) => {
           if (i <= endTagTokens.length - 2) {
             _skip()
@@ -569,10 +576,12 @@ function transform(str, factory) {
 }
 
 function getProps(tokens, factory) {
-  const props = {}
+  const props = new Map()
 
   let stackBraceOffset = 0
   let stackHtmlOffset = 0
+
+  let passPropIndex = 0
 
   let i = -1
   for (const token of tokens) {
@@ -598,7 +607,7 @@ function getProps(tokens, factory) {
       ) {
         const propName = token.value
         const propValue = valueToken.value
-        props[propName] = propValue
+        props.set(propName, propValue)
       }
       if (
         token.type === "IdentifierName" &&
@@ -615,13 +624,44 @@ function getProps(tokens, factory) {
           .join("")
         if (propValue) {
           const o = transform(propValue, factory)
-          props[propName] = o
+          props.set(propName, o)
         }
+      }
+      // if (
+      //   token.type === 'Punctuator' &&
+      //   token.value === '{'
+      // ) {
+      //   console.log('tokens[i + 1]', tokens[i + 1])
+      //   console.log('tokens[i + 2]', tokens[i + 2])
+      // }
+      if (
+        token.type === "Punctuator" &&
+        token.value === "{" &&
+        ((tokens[i + 1].type === "Punctuator" &&
+          tokens[i + 1].value === "...") ||
+          (tokens[i + 1].type === "WhiteSpace" &&
+            tokens[i + 2].type === "Punctuator" &&
+            tokens[i + 2].value === "..."))
+      ) {
+        let identifier
+        if (tokens[i + 1].type !== "WhiteSpace") {
+          identifier = tokens[i + 2]
+        } else {
+          identifier = tokens[i + 3]
+        }
+        const propName = passPropIndex.toString()
+        passPropIndex++
+        const propValue = `...${identifier.value}`
+        props.set(propName, propValue)
       }
     }
   }
 
-  return props
+  if (props.size) {
+    return props
+  } else {
+    return null
+  }
 }
 
 // input is nested HTML in the form of tokens
@@ -656,23 +696,27 @@ function _transform(tokens, factory) {
     if (atGlobal) {
       if (token.type === "HtmlStart") {
         const tagName = tokens[i].value.replace(/[<>\/]/g, "")
-        let props
         const isFragment = tagName === `Fragment_${rand}`
 
         const tagEndIndex = findTagEnd(tokens.slice(i))
         if (tagEndIndex === -1) {
           throw new Error(`Unable to find end of tag character '>'`)
         }
-        props = getProps(tokens.slice(i, i + tagEndIndex + 1), factory)
-        if (!Object.keys(props).length) {
-          props = null
-        }
+        const propsMap = getProps(tokens.slice(i, i + tagEndIndex + 1), factory)
 
-        const propsAsString = !props
+        let propsAsString = !propsMap
           ? "null"
-          : `{${Object.keys(props)
-              .map((p) => `${p}: ${props[p]}`)
-              .join(", ")}}`
+          : `{${Array.from(propsMap.keys())
+            .map((key) => {
+              if (!/^\d/.test(key)) {
+                return `${key}: ${propsMap.get(key)}`
+              } else {
+                // spread props
+                return `${propsMap.get(key)}`
+              }  
+              
+            })
+            .join(", ")}}`
 
         const isStandard = standardTags.includes(tagName)
         let line
@@ -694,7 +738,7 @@ function _transform(tokens, factory) {
         lines += line
       }
       if (token.type === "HtmlStringLiteral") {
-        const value = token.value.replace(/^\s+/g, '').replace(/\s+$/g, '')
+        const value = token.value.replace(/^\s+/g, "").replace(/\s+$/g, "")
         if (value) {
           addComma()
           lines += JSON.stringify(value)

@@ -23,9 +23,9 @@ const renderSign = (props) => {
 const Component = () => (h('div', null, []))
 const test = (
   h('div', {style: {color: 'orange'}}, [Component({}), h('button', {onClick: () => {
-      const el = h('div', null, [])
-      console?.log(el)
-    }}, []), signs.map(renderSign)])
+        const el = h('div', null, [])
+        console?.log(el)
+      }, ...passProps}, []), signs.map(renderSign)])
 )`
 
 test('components', (t) => {

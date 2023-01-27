@@ -13,10 +13,13 @@ const Component = () => (<div></div>)
 const test = (
   <div style={{color: 'orange'}}>
     <Component />
-    <button onClick={() => {
-      const el = <div/>
-      console?.log(el)
-    }} />
+    <button
+      onClick={() => {
+        const el = <div/>
+        console?.log(el)
+      }}
+      {...passProps}
+    />
     {signs.map(renderSign)}
   </div>
 )
