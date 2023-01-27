@@ -1,25 +1,22 @@
-// Instances of h are transform as well
-import h from "hyperscript"
+// @flow
 
-const signs = [{ value: "+" }, { value: "-" }]
+import { h as React } from "../imports.js"
 
-const renderSign = (props) => {
-  return h("span", null, [props.value])
+const TextareaField: any = (props) => {
+  const { label, rows, disabled, ref, ...passProps } = props
+
+  return (
+    <div className="flex field text-field">
+      <span>{label}</span>
+      <textarea
+        className="textarea"
+        rows={rows}
+        disabled={disabled}
+        ref={ref}
+        {...passProps}
+      />
+    </div>
+  )
 }
 
-const Component = () => h("div", null, [])
-const test = h("div", { style: { color: "orange" } }, [
-  Component({}),
-  h(
-    "button",
-    {
-      onClick: () => {
-        const el = h("div", null, [])
-        console?.log(el)
-      },
-      ...passProps,
-    },
-    []
-  ),
-  signs.map(renderSign),
-])
+export default TextareaField

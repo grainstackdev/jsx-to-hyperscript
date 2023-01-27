@@ -709,7 +709,12 @@ function _transform(tokens, factory) {
           : `{${Array.from(propsMap.keys())
             .map((key) => {
               if (!/^\d/.test(key)) {
-                return `${key}: ${propsMap.get(key)}`
+                const value = propsMap.get(key)
+                if (key !== value) {
+                  return `${key}: ${propsMap.get(key)}`
+                } else {
+                  return `${key}`
+                }
               } else {
                 // spread props
                 return `${propsMap.get(key)}`
