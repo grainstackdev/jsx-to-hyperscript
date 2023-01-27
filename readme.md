@@ -17,7 +17,7 @@ build/**/*{.js,.jsx}
 file.js
 ```
 
-### Example
+### Examples
 
 Input:
 
@@ -73,4 +73,30 @@ const test = h("div", { style: { color: "orange" } }, [
   ),
   signs.map(renderSign),
 ])
+```
+
+Fragments are supported, too:
+
+```js
+// input
+function renderRow() {
+  return (
+    <>
+      <span/>
+      <span/>
+    </>
+  )
+}
+```
+
+```js
+// output
+function renderRow() {
+  return (
+    [
+      h('span', null, []), 
+      h('span', null, [])
+    ]
+  )
+}
 ```

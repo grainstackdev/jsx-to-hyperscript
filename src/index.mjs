@@ -316,7 +316,13 @@ function getTokens(str) {
       // <>
       htmlTokens.push({
         type: "HtmlStart",
-        value: token.value + "Fragment_" + rand + nextToken.value,
+        value: token.value + "Fragment_" + rand,
+        selfClosing: true
+      })
+      htmlTokens.push({
+        type: "HtmlStartClosingBrace",
+        value: '>',
+        htmlStart: htmlTokens[htmlTokens.length - 1]
       })
       _skip()
     } else if (
