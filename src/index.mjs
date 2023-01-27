@@ -419,9 +419,9 @@ function extendContext(tokens) {
     // The top of the stack should be the last HtmlStart element seen.
     // The relative difference between the current stackBrace and the HtmlStart's stackBrace
     // tells whether or not we are currently in a prop value.
-    const lastHtmlStart = stackHtmlStart[stackHtmlStart.length - 1]
     // Being inside a prop value {} should be treated the same as being inside a prop value "",
     // This is an escaped context. There should be no stack increases happening in here.
+    const lastHtmlStart = stackHtmlStart[stackHtmlStart.length - 1]
     const inOpeningTag = !!lastHtmlStart
 
     // console.log('token', token)
@@ -506,11 +506,13 @@ function extendContext(tokens) {
       token.type === "HtmlStartClosingBrace" &&
       token.value === ">"
     ) {
+      stackHtmlStart.pop()
+      const lastHtmlStart = stackHtmlStart[stackHtmlStart.length - 1]
+      const inOpeningTag = !!lastHtmlStart
       if (!inOpeningTag) {
         startClipFlag = true
       }
       stackHtml.push(token)
-      stackHtmlStart.pop()
     }
 
     if (startClipFlag) {
