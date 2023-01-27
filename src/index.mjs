@@ -688,7 +688,7 @@ function _transform(tokens, factory) {
         lines += line
       }
       if (token.type === "HtmlStringLiteral") {
-        const value = token.value.replace(/\s/g, '')
+        const value = token.value.replace(/^\s+/g, '').replace(/\s+$/g, '')
         if (value) {
           addComma()
           lines += JSON.stringify(value)
