@@ -258,7 +258,7 @@ function findCurlyBraceEnd(tokens) {
 }
 
 function getTokens(str) {
-  const tokens = splitTagEnds(Array.from(jsTokens(str), (token) => token))
+  const tokens = splitTagEnds(Array.from(jsTokens(str)))
 
   const htmlTokens = []
   let i = 0
@@ -374,6 +374,7 @@ function extendContext(tokens) {
   const stackParen = []
   const stackBrace = []
   const stackHtml = []
+  const stackHtmlStart = []
 
   const result = []
 
@@ -409,13 +410,21 @@ function extendContext(tokens) {
     })
   }
 
-  let lastHtmlStart = null
-
   let i = -1
   for (const token of tokens) {
     i++
 
     let startClipFlag = false
+
+    // The top of the stack should be the last HtmlStart element seen.
+    // The relative difference between the current stackBrace and the HtmlStart's stackBrace
+    // tells whether or not we are currently in a prop value.
+    const lastHtmlStart = stackHtmlStart[stackHtmlStart.length - 1]
+    // Being inside a prop value {} should be treated the same as being inside a prop value "",
+    // This is an escaped context. There should be no stack increases happening in here.
+    const inOpeningTag = !!lastHtmlStart
+
+    // console.log('token', token)
 
     if (startClip === null && token.type === "TemplateTail") {
       stackBackTick.pop()
@@ -425,7 +434,9 @@ function extendContext(tokens) {
     }
     if (startClip === null && token.value === "}") {
       if (!token.insideOpeningTag) {
-        startClipFlag = true
+        if (!inOpeningTag) {
+          startClipFlag = true
+        }
       }
       stackBrace.pop()
     }
@@ -434,38 +445,41 @@ function extendContext(tokens) {
       const isSelfClosing = token.htmlStart?.selfClosing
       if (!isSelfClosing) {
         const popToken = stackHtml.pop()
+        // todo
         if (!popToken) {
           htmlStart = lastHtmlStart
-          lastHtmlStart = null
         } else {
           htmlStart = popToken.htmlStart
         }
+      } else if (isSelfClosing) {
+        stackHtmlStart.pop()
       }
 
       if (stackHtml.length > 0) {
-        startClipFlag = true
+        // HtmlStringLiteral is seeing HtmlEnd within {} braces and starting a clip when it shouldn't
+        if (!inOpeningTag) {
+          startClipFlag = true
+        }
       }
-      endClip(i)
-      // pop because endClip adds this token.
-      // If endClip is called before the result.push, then a pop must proceed it.
-      result.pop()
+      if (startClip !== null) {
+        endClip(i)
+        // pop because endClip adds this token.
+        // If endClip is called before the result.push, then a pop must proceed it.
+        result.pop()
+      }
     }
 
-    const forward = {
-      ...token,
-      context: {
-        stackBackTick: stackBackTick.length,
-        stackParen: stackParen.length,
-        stackBrace: stackBrace.length,
-        stackHtml: stackHtml.length,
-      },
+    token.context = {
+      stackBackTick: stackBackTick.length,
+      stackParen: stackParen.length,
+      stackBrace: stackBrace.length,
+      stackHtml: stackHtml.length,
     }
     if (htmlStart) {
-      forward.htmlStart = htmlStart
+      token.htmlStart = htmlStart
     }
-    // console.log('startClip', token.type, token.value, startClip, stackHtml.length)
     if (startClip === null) {
-      result.push(forward)
+      result.push(token)
     }
 
     if (startClip === null && token.type === "TemplateHead") {
@@ -479,15 +493,14 @@ function extendContext(tokens) {
       stackBrace.push(true)
     }
     if (token.type === "HtmlStart") {
-      lastHtmlStart = token
       endClip(i)
+      stackHtmlStart.push(token)
     }
     if (
       startClip === null &&
       token.type === "HtmlStart" &&
       token.value === `<Fragment_${rand}>`
     ) {
-      lastHtmlStart = token
       stackHtml.push(token)
     }
     if (
@@ -495,8 +508,11 @@ function extendContext(tokens) {
       token.type === "HtmlStartClosingBrace" &&
       token.value === ">"
     ) {
-      startClipFlag = true
+      if (!inOpeningTag) {
+        startClipFlag = true
+      }
       stackHtml.push(token)
+      stackHtmlStart.pop()
     }
 
     if (startClipFlag) {
@@ -637,14 +653,11 @@ function _transform(tokens, factory) {
         let props
         const isFragment = tagName === `Fragment_${rand}`
 
-        let tagEndIndex
-        if (!tagName.endsWith(">")) {
-          tagEndIndex = findTagEnd(tokens.slice(i))
-          props = getProps(tokens.slice(i, i + tagEndIndex + 1), factory)
-        } else {
-          tagEndIndex = 0
-          props = null
+        const tagEndIndex = findTagEnd(tokens.slice(i))
+        if (tagEndIndex === -1) {
+          throw new Error(`Unable to find end of tag character '>'`)
         }
+        props = getProps(tokens.slice(i, i + tagEndIndex + 1), factory)
         if (!Object.keys(props).length) {
           props = null
         }
