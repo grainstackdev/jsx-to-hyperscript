@@ -1,4 +1,4 @@
-# jsx-transform-modern-cli
+# jsx-convert
 
 A CLI tool for converting JSX files into standard JS.
 

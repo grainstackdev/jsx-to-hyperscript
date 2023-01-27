@@ -6,6 +6,15 @@
   "bin": {
     "jsx-convert": "src/cli.mjs"
   },
+  "keywords": [
+    "jsx",
+    "transform",
+    "jsx-transform",
+    "convert",
+    "parse",
+    "tokenize",
+    "tokenizer"
+  ],
   "dependencies": {
     "glob": "^8.1.0",
     "html-tags": "^3.2.0",
