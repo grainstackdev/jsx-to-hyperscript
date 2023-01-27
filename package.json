@@ -15,6 +15,10 @@
     "tokenize",
     "tokenizer"
   ],
+  "scripts": {
+    "test": "tape 'tests/test.js' | tnyan",
+    "test-verbose": "tape 'tests/test.js'"
+  },
   "dependencies": {
     "glob": "^8.1.0",
     "html-tags": "^3.2.0",
@@ -23,6 +27,8 @@
   },
   "devDependencies": {
     "jsx-transform": "^2.4.1",
-    "prettier": "^2.8.3"
+    "prettier": "^2.8.3",
+    "tap-nyan": "^1.1.0",
+    "tape": "^5.6.3"
   }
 }
