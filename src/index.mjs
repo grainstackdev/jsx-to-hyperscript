@@ -609,8 +609,7 @@ function getProps(tokens, factory) {
         const propName = token.value
         const propValue = valueToken.value
         props.set(propName, propValue)
-      }
-      if (
+      } else if (
         token.type === "IdentifierName" &&
         equalToken.type === "Punctuator" &&
         equalToken.value === "=" &&
@@ -627,15 +626,14 @@ function getProps(tokens, factory) {
           const o = transform(propValue, factory)
           props.set(propName, o)
         }
-      }
-      // if (
-      //   token.type === 'Punctuator' &&
-      //   token.value === '{'
-      // ) {
-      //   console.log('tokens[i + 1]', tokens[i + 1])
-      //   console.log('tokens[i + 2]', tokens[i + 2])
-      // }
-      if (
+      } else if (
+        token.type === 'IdentifierName'
+      ) {
+        // A prop with no `=` sign after it is `true` by default.
+        const propName = token.value
+        const propValue = 'true'
+        props.set(propName, propValue)
+      } else if (
         token.type === "Punctuator" &&
         token.value === "{" &&
         ((tokens[i + 1].type === "Punctuator" &&
