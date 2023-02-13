@@ -28,7 +28,7 @@ file.js
 Input:
 
 ```jsx
-// Instances of React are transform as well
+// Instances of React are transformed as well
 import React from "hyperscript"
 
 const signs = [{ value: "+" }, { value: "-" }]
@@ -58,7 +58,7 @@ const test = (
 Output:
 
 ```js
-// Instances of h are transform as well
+// Instances of h are transformed as well
 import h from "hyperscript"
 
 const signs = [{ value: "+" }, { value: "-" }]
