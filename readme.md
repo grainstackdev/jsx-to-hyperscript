@@ -5,7 +5,7 @@ A CLI tool for converting JSX files into standard JS.
 Usage:
 
 ```
-npx jsx-convert <glob> [--write] [--factory='h']
+npx jsx-convert <glob> [--write] [--factory='h'] [--flow]
 or
 node ./node_modules/jsx-convert/src/cli.mjs <glob> [--write] [--factory='h']
 ```
@@ -16,6 +16,12 @@ build/**/*.js
 build/**/*{.js,.jsx}
 file.js
 ```
+
+### CLI Flags
+
+* `--write` - Causes the files matching the glob to be overwritten by the output, otherwise output goes to stdout.
+* `--factory='h'` - By default the factory function is `h`. Use this to change it.
+* `--flow` - Passes the input through `flow-remove-types` before transforming.
 
 ### Examples
 
