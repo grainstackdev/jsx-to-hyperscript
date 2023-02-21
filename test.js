@@ -1,4 +1,1 @@
-const RadioField = () => (
-  <div disabled>
-  </div>
-)
+const element = (<div/>)

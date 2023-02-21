@@ -1,13 +1,13 @@
-# jsx-convert
+# jsx-to-h
 
 A CLI tool for converting JSX files into standard JS.
 
 Usage:
 
 ```
-npx jsx-convert <glob> [--write] [--factory='h'] [--flow]
+npx jsx-to-h <glob> [--write] [--factory='h'] [--flow]
 or
-node ./node_modules/jsx-convert/src/cli.mjs <glob> [--write] [--factory='h']
+node ./node_modules/jsx-to-h/src/cli.mjs <glob> [--write] [--factory='h']
 ```
 
 Some examples of what `<glob>` can be:
