@@ -1,5 +1,5 @@
 {
-  "name": "jsx-to-h",
+  "name": "jsx-to-hyperscript",
   "version": "1.1.9",
   "license": "MIT",
   "type": "module",
@@ -22,7 +22,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/grainstackdev/jsx-to-h.git"
+    "url": "https://github.com/grainstackdev/jsx-to-hyperscript.git"
   },
   "scripts": {
     "test": "tape 'tests/test.js' | tnyan",
