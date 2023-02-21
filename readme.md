@@ -1,6 +1,6 @@
 # jsx-to-h
 
-A CLI tool for converting JSX files into standard JS.
+> A CLI command for converting JSX files into standard JS.
 
 Usage:
 

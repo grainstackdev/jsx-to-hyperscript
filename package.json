@@ -4,7 +4,9 @@
   "license": "MIT",
   "type": "module",
   "bin": "src/cli.mjs",
+  "description": "A CLI command for converting JSX files into standard JS.",
   "keywords": [
+    "cli",
     "jsx",
     "transform",
     "jsx-transform",
