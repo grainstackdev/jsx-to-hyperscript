@@ -18,6 +18,10 @@
     "tokenize",
     "tokenizer"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/grainstackdev/jsx-to-h.git"
+  },
   "scripts": {
     "test": "tape 'tests/test.js' | tnyan",
     "test-verbose": "tape 'tests/test.js'"
