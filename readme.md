@@ -6,8 +6,17 @@ Usage:
 
 ```
 npx jsx-to-hyperscript <glob> [--write] [--factory='h'] [--flow]
-or
-node ./node_modules/jsx-to-hyperscript/src/cli.mjs <glob> [--write] [--factory='h']
+```
+
+Example:
+
+```
+// package.json
+{
+  "scripts": {
+    "build": "jsx-to-hyperscript 'build/**/*.{js,mjs}' --write"
+  }
+}
 ```
 
 Some examples of what `<glob>` can be:
