@@ -38,7 +38,7 @@ Input:
 
 ```jsx
 // Instances of React are transformed as well
-import React from "hyperscript"
+import {h as React} from "grainbox"
 
 const signs = [{ value: "+" }, { value: "-" }]
 
@@ -68,7 +68,7 @@ Output:
 
 ```js
 // Instances of h are transformed as well
-import h from "hyperscript"
+import {h as h} from "grainbox"
 
 const signs = [{ value: "+" }, { value: "-" }]
 

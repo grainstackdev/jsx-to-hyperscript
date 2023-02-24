@@ -25,8 +25,8 @@
     "url": "https://github.com/grainstackdev/jsx-to-hyperscript.git"
   },
   "scripts": {
-    "test": "tape 'tests/test.js' | tnyan",
-    "test-verbose": "tape 'tests/test.js'"
+    "test": "tape 'tests/test.js'",
+    "readme": "git add . && git commit -m 'readme' && npm version patch && git push && npm publish"
   },
   "dependencies": {
     "flow-remove-types": "^2.198.2",
@@ -38,7 +38,6 @@
   },
   "devDependencies": {
     "jsx-transform": "^2.4.1",
-    "tap-nyan": "^1.1.0",
     "tape": "^5.6.3"
   }
 }
