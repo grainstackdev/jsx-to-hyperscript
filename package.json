@@ -37,6 +37,7 @@
     "prettier": "^2.8.3"
   },
   "devDependencies": {
+    "hyperscript": "^2.0.2",
     "jsx-transform": "^2.4.1",
     "tape": "^5.6.3"
   }
