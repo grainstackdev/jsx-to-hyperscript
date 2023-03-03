@@ -32,6 +32,7 @@
     "flow-remove-types": "^2.198.2",
     "glob": "^8.1.0",
     "html-tags": "^3.2.0",
+    "hyphenate-style-name": "^1.0.4",
     "js-tokens": "^8.0.1",
     "minimist": "^1.2.7",
     "prettier": "^2.8.3"

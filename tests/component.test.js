@@ -11,7 +11,7 @@ const renderSign = (props) => {
 
 const Component = () => (<div></div>)
 const test = (
-  <div style={{color: 'orange'}}>
+  <div style={{color: 'orange', flexDirection: 'column'}}>
     <Component />
     <button
       onClick={() => {

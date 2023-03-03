@@ -1,5 +1,7 @@
 import jsTokens from "js-tokens"
 import standardTags from "html-tags"
+import hyphenateStyleName from 'hyphenate-style-name'
+import prettier from 'prettier'
 
 const rand = Math.random().toString().slice(-2)
 
@@ -703,6 +705,11 @@ function _transform(tokens, factory) {
         }
         const propsMap = getProps(tokens.slice(i, i + tagEndIndex + 1), factory)
 
+        if (propsMap?.has('style')) {
+          propsMap.set('style', transformStyle(propsMap.get('style')))
+        }
+        console.log('propsMap', propsMap)
+
         let propsAsString = !propsMap
           ? "null"
           : `{${Array.from(propsMap.keys())
@@ -802,4 +809,17 @@ export default function parseJsx(str, options) {
   // out = addFragmentFunction(out)
 
   return out
+}
+
+function transformStyle(styleObjectString) {
+  styleObjectString = prettier.format(styleObjectString, {parser: 'json'})
+  const style = JSON.parse(styleObjectString)
+  const result = {}
+  for (const key of Object.keys(style)) {
+    if (typeof style[key] !== 'string') continue
+
+    console.log('hyphenateStyleName(key)', key, hyphenateStyleName(key))
+    result[hyphenateStyleName(key)] = style[key]
+  }
+  return JSON.stringify(result)
 }
