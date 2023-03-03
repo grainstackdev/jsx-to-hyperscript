@@ -708,7 +708,6 @@ function _transform(tokens, factory) {
         if (propsMap?.has('style')) {
           propsMap.set('style', transformStyle(propsMap.get('style')))
         }
-        console.log('propsMap', propsMap)
 
         let propsAsString = !propsMap
           ? "null"
@@ -818,7 +817,6 @@ function transformStyle(styleObjectString) {
   for (const key of Object.keys(style)) {
     if (typeof style[key] !== 'string') continue
 
-    console.log('hyphenateStyleName(key)', key, hyphenateStyleName(key))
     result[hyphenateStyleName(key)] = style[key]
   }
   return JSON.stringify(result)
