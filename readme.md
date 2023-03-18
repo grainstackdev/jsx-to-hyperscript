@@ -2,15 +2,21 @@
 
 > A CLI command for converting JSX files into standard JS.
 
+## Usage
+
+### CLI
+
+```
 Usage:
-
+    jsx-to-hyperscript <glob> [--write] [--factory='h'] [--flow]
+    
+Options:
+    --write       When set, causes the file to be overwritten in-place.
+    --factory     By default 'h'. The factory function. Optional.
+    --flow        If you use flowtype, removes type annotations.
 ```
-npx jsx-to-hyperscript <glob> [--write] [--factory='h'] [--flow]
-```
 
-Example:
-
-```
+```json5
 // package.json
 {
   "scripts": {
@@ -19,20 +25,21 @@ Example:
 }
 ```
 
-Some examples of what `<glob>` can be:
+### Import
+
+```ts
+import convertJsx from 'jsx-to-hyperscript'
+
+type options = {
+  factory?: 'h'
+}
+
+convertJsx(fileContents[, options])
 ```
-build/**/*.js
-build/**/*{.js,.jsx}
-file.js
-```
 
-### CLI Flags
+___
 
-* `--write` - Causes the files matching the glob to be overwritten by the output, otherwise output goes to stdout.
-* `--factory='h'` - By default the factory function is `h`. Use this to change it.
-* `--flow` - Passes the input through `flow-remove-types` before transforming.
-
-### Examples
+## Examples
 
 Input:
 

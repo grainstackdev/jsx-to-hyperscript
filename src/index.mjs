@@ -798,8 +798,8 @@ function addFragmentFunction(str) {
   return f + str
 }
 
-export default function parseJsx(str, options) {
-  const factory = options.factory || "h"
+export default function convertJsx(str, options) {
+  const factory = options?.factory || "h"
   let out
   if (factory !== "React") {
     out = replaceReact(str, factory)
