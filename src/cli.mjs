@@ -12,6 +12,7 @@ const pattern = args._[0]
 const writeFlag = args.write
 const factory = args.factory || "h"
 const flow = args.flow
+const reverse = args.reverse
 
 glob(pattern, {}, async (err, files) => {
   for (const file of files) {
@@ -26,7 +27,8 @@ glob(pattern, {}, async (err, files) => {
     str = prettier.format(str, {parser: 'typescript'})
 
     const out = jsxConvert(str, {
-      factory
+      factory,
+      reverse
     })
 
     if (writeFlag) {

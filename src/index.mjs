@@ -539,7 +539,7 @@ function extendContext(tokens) {
   return result
 }
 
-function transform(str, factory) {
+function transform(str, options) {
   let tokens = getTokens(str)
   // tokens = extendContext(tokens)
 
@@ -563,7 +563,7 @@ function transform(str, factory) {
       const endClip = i + 1
 
       const clip = tokens.slice(startClip, endClip)
-      const base = _transform(clip, factory)
+      const base = _transform(clip, options)
       const baseTokens = Array.from(jsTokens(base))
       baseTokens.forEach((t) => transformedTokens.push(t))
       startClip = null
@@ -578,7 +578,7 @@ function transform(str, factory) {
   return transformedTokens.map((t) => t.value).join("")
 }
 
-function getProps(tokens, factory) {
+function getProps(tokens, options) {
   const props = new Map()
 
   let stackBraceOffset = 0
@@ -625,7 +625,7 @@ function getProps(tokens, factory) {
           .map((t) => t.value)
           .join("")
         if (propValue) {
-          const o = transform(propValue, factory)
+          const o = transform(propValue, options)
           props.set(propName, o)
         }
       } else if (
@@ -666,12 +666,14 @@ function getProps(tokens, factory) {
 }
 
 // input is nested HTML in the form of tokens
-function _transform(tokens, factory) {
+function _transform(tokens, options) {
   // let tokens = getTokens(str)
   // tokens = extendContext(tokens)
+  const {factory, reverse} = options || {}
 
   let lines = ""
   let stackOffsetBrace = 0
+  let started = false // started becomes true when the first [ is added to lines.
 
   function addComma() {
     if (
@@ -703,7 +705,7 @@ function _transform(tokens, factory) {
         if (tagEndIndex === -1) {
           throw new Error(`Unable to find end of tag character '>'`)
         }
-        const propsMap = getProps(tokens.slice(i, i + tagEndIndex + 1), factory)
+        const propsMap = getProps(tokens.slice(i, i + tagEndIndex + 1), options)
 
         if (propsMap?.has('style')) {
           propsMap.set('style', transformStyle(propsMap.get('style')))
@@ -731,17 +733,25 @@ function _transform(tokens, factory) {
         const isStandard = standardTags.includes(tagName)
         let line
         if (isStandard) {
-          line = `${factory}('${tagName}', ${propsAsString}, [`
+          if (!reverse && started) {
+            line = `() => ${factory}('${tagName}', ${propsAsString}, [`
+          } else {
+            line = `${factory}('${tagName}', ${propsAsString}, [`
+          }
         } else {
           if (isFragment) {
             line = `[`
           } else {
             if (propsAsString !== "null") {
-              line = `${tagName}(${propsAsString})`
+              line = reverse ? `${tagName}(${propsAsString})` : `() => (${tagName}(${propsAsString}))`
             } else {
-              line = `${tagName}({})`
+              line = reverse ? `${tagName}({})` : `() => (${tagName}({}))`
             }
           }
+        }
+
+        if (line.endsWith('[')) {
+          started = true
         }
 
         addComma()
@@ -751,7 +761,7 @@ function _transform(tokens, factory) {
         const value = token.value.replace(/^\s+/g, "").replace(/\s+$/g, "")
         if (value) {
           addComma()
-          lines += JSON.stringify(value)
+          lines += `${JSON.stringify(value)}`
         }
       }
       if (
@@ -767,7 +777,8 @@ function _transform(tokens, factory) {
           .map((t) => t.value)
           .join("")
         addComma()
-        lines += curlyCode
+
+        lines += reverse ? `${curlyCode}` : `() => (${curlyCode})`
       }
       if (token.type === "HtmlEnd") {
         const tagName = tokens[i]?.htmlStart?.value?.replace(/[<>\/]/g, "")
@@ -804,7 +815,7 @@ export default function convertJsx(str, options) {
   if (factory !== "React") {
     out = replaceReact(str, factory)
   }
-  out = transform(out, factory)
+  out = transform(out, options)
   // out = addFragmentFunction(out)
 
   return out
