@@ -81,13 +81,13 @@ import {h as h} from "grainbox"
 const signs = [{ value: "+" }, { value: "-" }]
 
 const renderSign = (props) => {
-  return h("span", null, [props.value])
+  return h("span", null, [() => (props.value)])
 }
 
 const Component = () => h("div", null, [])
 const test = h("div", { style: { color: "orange" } }, [
-  Component({}),
-  h(
+  () => (Component({})),
+  () => h(
     "button",
     {
       onClick: () => {
@@ -98,7 +98,7 @@ const test = h("div", { style: { color: "orange" } }, [
     },
     []
   ),
-  signs.map(renderSign),
+  () => (signs.map(renderSign)),
 ])
 ```
 
@@ -121,8 +121,8 @@ function renderRow() {
 function renderRow() {
   return (
     [
-      h('span', null, []), 
-      h('span', null, [])
+      () => h('span', null, []),
+      () => h('span', null, [])
     ]
   )
 }
