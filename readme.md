@@ -32,7 +32,8 @@ Options:
 import convertJsx from 'jsx-to-hyperscript'
 
 type options = {
-  factory?: 'h'
+  factory?: 'h',
+  reverse?: false
 }
 
 convertJsx(fileContents[, options])
