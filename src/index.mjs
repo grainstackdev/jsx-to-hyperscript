@@ -697,8 +697,6 @@ function _transform(tokens, options) {
   for (const token of tokens) {
     i++
 
-    console.log('token', token)
-
     if (i === 0 && token.type === "HtmlStart") {
       stackOffsetBrace = -token.context.stackBrace
     }
@@ -732,7 +730,6 @@ function _transform(tokens, options) {
                 }
               } else {
                 // spread props
-                console.log('propsMap.get(key)', propsMap.get(key))
                 return `${propsMap.get(key)}`
               }  
               
@@ -789,7 +786,6 @@ function _transform(tokens, options) {
         if (index === -1) {
           throw new Error(`Unable to find matching curly brace '}'`)
         }
-        console.log('index', index)
         const curlyCode = tokens
           .slice(i + 1, i + index)
           .map((t) => t.value)
