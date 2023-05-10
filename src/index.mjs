@@ -824,6 +824,10 @@ function addFragmentFunction(str) {
 }
 
 export default function convertJsx(str, options) {
+  options = options || {}
+  if (!options.factory) {
+    options.factory = 'h'
+  }
   const factory = options?.factory || "h"
   let out
   if (factory !== "React") {
