@@ -1,6 +1,6 @@
 {
   "name": "jsx-to-hyperscript",
-  "version": "2.0.3",
+  "version": "2.1.0",
   "license": "MIT",
   "description": "A CLI command for converting JSX files into standard JS.",
   "keywords": [
