@@ -438,7 +438,8 @@ function extendContext(tokens) {
     // This is an escaped context. There should be no stack increases happening in here.
     const lastHtmlStart = stackHtmlStart[stackHtmlStart.length - 1]
     const inOpeningTag = !!lastHtmlStart
-    const inValueBrace = stackBrace.length - (stackHtml[stackHtml.length - 1]?.context.stackBrace ?? 0) > 0
+    // The current stackBrace is greater than what it was when the current html context started:
+    const inValueBrace = (stackBrace.length - (stackHtml[stackHtml.length - 1]?.context.stackBrace ?? 0)) > 0
 
     // console.log('token', token)
 
@@ -448,6 +449,9 @@ function extendContext(tokens) {
     if (startClip === null && token.value === ")") {
       stackParen.pop()
     }
+    // todo:
+    //  If JSX is used inside of value braces, then in the current implementation,
+    //  when that JSX is existed, it starts a new clip, and this causes the following line to be skipped:
     if (startClip === null && token.value === "}") {
       if (!token.insideOpeningTag && !inOpeningTag && stackHtml.length > 0 && !inValueBrace) {
         startClipFlag = true
@@ -470,8 +474,10 @@ function extendContext(tokens) {
       }
 
       if (stackHtml.length > 0) {
-        // HtmlStringLiteral is seeing HtmlEnd within {} braces and starting a clip when it shouldn't
-        if (!inOpeningTag && !inValueBrace) {
+        // HtmlStringLiteral clip should start when still inside an
+        // html context after encountering HtmlEnd.
+        const updatedInValueBrace = (stackBrace.length - (stackHtml[stackHtml.length - 1]?.context.stackBrace ?? 0)) > 0
+        if (!inOpeningTag && !updatedInValueBrace) {
           startClipFlag = true
         }
       }
@@ -691,6 +697,8 @@ function _transform(tokens, options) {
   for (const token of tokens) {
     i++
 
+    console.log('token', token)
+
     if (i === 0 && token.type === "HtmlStart") {
       stackOffsetBrace = -token.context.stackBrace
     }
@@ -724,11 +732,17 @@ function _transform(tokens, options) {
                 }
               } else {
                 // spread props
+                console.log('propsMap.get(key)', propsMap.get(key))
                 return `${propsMap.get(key)}`
               }  
               
             })
             .join(", ")}}`
+
+        const onlySpread = propsAsString.match(/^{\.\.\.([^,]+)}$/)
+        if (onlySpread) {
+          propsAsString = onlySpread[1]
+        }
 
         const isStandard = standardTags.includes(tagName)
         let line
@@ -772,6 +786,10 @@ function _transform(tokens, options) {
         // There is an expression between curly braces which needs to be
         // added as an element in the array of children.
         const index = findCurlyBraceEnd(tokens.slice(i))
+        if (index === -1) {
+          throw new Error(`Unable to find matching curly brace '}'`)
+        }
+        console.log('index', index)
         const curlyCode = tokens
           .slice(i + 1, i + index)
           .map((t) => t.value)

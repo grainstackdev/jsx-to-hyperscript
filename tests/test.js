@@ -3,6 +3,13 @@ import jsxConvert from "../src/index.mjs";
 import fs from 'fs'
 import path from 'path'
 
+const restAnswer = `const a = (props) => (
+  h('div', props, [() => h('span', null, [])])
+)`
+
+const mapAnswer = `h('div', null, [() => (a.map((props) => (<span>{props.value}</span>)))])`
+const mapReverse = `h('div', null, [a.map((props) => (<span>{props.value}</span>))])`
+
 const fragmentsAnswer = `function renderRow() {
   return (
     [() => h('span', null, []), () => h('span', null, [])]
@@ -85,6 +92,37 @@ test('fragments', (t) => {
   })
 
   t.equal(outReverse, fragmentsAnswerReverse)
+
+  t.end()
+})
+
+test('map', (t) => {
+  const str = fs.readFileSync(path.resolve(process.cwd(), 'tests/map.test.js'), {encoding: 'utf8'})
+
+  const out = jsxConvert(str, {
+    factory: 'h'
+  })
+
+  t.equal(out, mapAnswer)
+
+  const outReverse = jsxConvert(str, {
+    factory: 'h',
+    reverse: true
+  })
+
+  t.equal(outReverse, mapReverse)
+
+  t.end()
+})
+
+test('rest', (t) => {
+  const str = fs.readFileSync(path.resolve(process.cwd(), 'tests/rest.test.js'), {encoding: 'utf8'})
+
+  const out = jsxConvert(str, {
+    factory: 'h'
+  })
+
+  t.equal(out, restAnswer)
 
   t.end()
 })
