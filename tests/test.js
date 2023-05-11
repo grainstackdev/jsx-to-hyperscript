@@ -4,15 +4,15 @@ import fs from 'fs'
 import path from 'path'
 
 const restAnswer = `const a = (props) => (
-  h('div', props, [() => h('span', null, [])])
+  j('div', props, [() => j('span', null, [])])
 )`
 
-const mapAnswer = `h('div', null, [() => (a.map((props) => (<span>{props.value}</span>)))])`
+const mapAnswer = `j('div', null, [() => (a.map((props) => (<span>{props.value}</span>)))])`
 const mapReverse = `h('div', null, [a.map((props) => (<span>{props.value}</span>))])`
 
 const fragmentsAnswer = `function renderRow() {
   return (
-    [() => h('span', null, []), () => h('span', null, [])]
+    [() => j('span', null, []), () => j('span', null, [])]
   )
 }`
 const fragmentsAnswerReverse = `function renderRow() {
@@ -21,23 +21,23 @@ const fragmentsAnswerReverse = `function renderRow() {
   )
 }`
 
-const componentsAnswer = `// Instances of h are transform as well
-import h from "hyperscript"
+const componentsAnswer = `// Instances of j are transform as well
+import j from "hyperscript"
 
 const signs = [{ value: "+" }, { value: "-" }]
 
 const renderSign = (props) => {
   return (
-    h('span', null, [() => (props.value)])
+    j('span', null, [() => (props.value)])
   )
 }
 
-const Component = () => (h('div', null, []))
+const Component = () => (j('div', null, []))
 const test = (
-  h('div', {style: {"color":"orange","flex-direction":"column"}}, [() => (Component({})), () => h('button', {onClick: () => {
-        const el = h('div', null, [])
+  j('div', {style: () => ({"color":"orange","flex-direction":"column"})}, [() => (Component({})), () => j('button', {onClick: () => (() => {
+        const el = j('div', null, [])
         console?.log(el)
-      }, ...passProps}, []), () => (signs.map(renderSign))])
+      }), ...passProps}, []), () => (signs.map(renderSign))])
 )`
 const componentsAnswerReverse = `// Instances of h are transform as well
 import h from "hyperscript"
@@ -61,15 +61,12 @@ const test = (
 test('components', (t) => {
   const str = fs.readFileSync(path.resolve(process.cwd(), 'tests/component.test.js'), {encoding: 'utf8'})
 
-  const out = jsxConvert(str, {
-    factory: 'h'
-  })
+  const out = jsxConvert(str)
 
   t.equal(out, componentsAnswer)
 
   const outReverse = jsxConvert(str, {
-    factory: 'h',
-    reverse: true
+    leafsFirst: true
   })
 
   t.equal(outReverse, componentsAnswerReverse)
@@ -80,15 +77,12 @@ test('components', (t) => {
 test('fragments', (t) => {
   const str = fs.readFileSync(path.resolve(process.cwd(), 'tests/fragment.test.js'), {encoding: 'utf8'})
 
-  const out = jsxConvert(str, {
-    factory: 'h'
-  })
+  const out = jsxConvert(str)
 
   t.equal(out, fragmentsAnswer)
 
   const outReverse = jsxConvert(str, {
-    factory: 'h',
-    reverse: true
+    leafsFirst: true
   })
 
   t.equal(outReverse, fragmentsAnswerReverse)
@@ -99,15 +93,12 @@ test('fragments', (t) => {
 test('map', (t) => {
   const str = fs.readFileSync(path.resolve(process.cwd(), 'tests/map.test.js'), {encoding: 'utf8'})
 
-  const out = jsxConvert(str, {
-    factory: 'h'
-  })
+  const out = jsxConvert(str)
 
   t.equal(out, mapAnswer)
 
   const outReverse = jsxConvert(str, {
-    factory: 'h',
-    reverse: true
+    leafsFirst: true
   })
 
   t.equal(outReverse, mapReverse)
@@ -118,9 +109,7 @@ test('map', (t) => {
 test('rest', (t) => {
   const str = fs.readFileSync(path.resolve(process.cwd(), 'tests/rest.test.js'), {encoding: 'utf8'})
 
-  const out = jsxConvert(str, {
-    factory: 'h'
-  })
+  const out = jsxConvert(str)
 
   t.equal(out, restAnswer)
 

@@ -12,7 +12,7 @@ Usage:
     
 Options:
     --write       When set, causes the file to be overwritten in-place.
-    --reverse     As a non-standard improvement, `h` calls are nested with arrow functions so that execution order is contextual. If you would like the original behavior, use this reverse flag. See docs. Optional.
+    --leafsFirst  As a non-standard improvement, `h` calls are nested with arrow functions so that execution order is contextual. If you would like the original behavior, use this leafsFirst flag. See docs. Optional.
     --factory     By default 'h'. The factory function. Optional.
     --flow        If you use flowtype, removes type annotations.
 ```
@@ -129,12 +129,12 @@ function renderRow() {
 }
 ```
 
-## --reverse
+## --leafsFirst
 
 hyperscript is usually used like this:
 
 ```js
-h('div', null, [
+h('div', {className: 'col'}, [
   h('div', null, [
     h('span')
   ])
@@ -145,7 +145,7 @@ However, this would cause the leafs to compute before the root.
 Instead, by using arrow functions, the call order can be flipped around so that elements are built from root to leaf:
 
 ```js
-h('div', null, [
+h('div', {className: () => ('col')}, [
   () => h('div', null, [
     () => h('span')
   ])
@@ -154,4 +154,4 @@ h('div', null, [
 
 This allows [`grainbox`](https://www.npmjs.com/package/grainbox), along with some slight modifications to hyperscript, to build html with context. For example, when the span above is being created, it is possible to obtain a reference to the parent div. This is useful for setting up fine-grained updates.
 
-Because context is gained in the latter, it is the default. If you need the former, you can set the `--reverse` flag.
+Because context is gained in the latter, it is the default. If you need the former, you can set the `--leafsFirst` flag.

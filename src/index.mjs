@@ -675,7 +675,7 @@ function getProps(tokens, options) {
 function _transform(tokens, options) {
   // let tokens = getTokens(str)
   // tokens = extendContext(tokens)
-  const {factory, reverse} = options || {}
+  const {factory, leafsFirst} = options || {}
 
   let lines = ""
   let stackOffsetBrace = 0
@@ -723,10 +723,14 @@ function _transform(tokens, options) {
             .map((key) => {
               if (!/^\d/.test(key)) {
                 const value = propsMap.get(key)
-                if (key !== value) {
-                  return `${key}: ${propsMap.get(key)}`
+                if (leafsFirst) {
+                  if (key === value) {
+                    return `${key}`
+                  } else {
+                    return `${key}: ${value}` 
+                  }  
                 } else {
-                  return `${key}`
+                  return `${key}: () => (${value})`
                 }
               } else {
                 // spread props
@@ -744,7 +748,7 @@ function _transform(tokens, options) {
         const isStandard = standardTags.includes(tagName)
         let line
         if (isStandard) {
-          if (!reverse && started) {
+          if (!leafsFirst && started) {
             line = `() => ${factory}('${tagName}', ${propsAsString}, [`
           } else {
             line = `${factory}('${tagName}', ${propsAsString}, [`
@@ -754,9 +758,9 @@ function _transform(tokens, options) {
             line = `[`
           } else {
             if (propsAsString !== "null") {
-              line = reverse ? `${tagName}(${propsAsString})` : `() => (${tagName}(${propsAsString}))`
+              line = leafsFirst ? `${tagName}(${propsAsString})` : `() => (${tagName}(${propsAsString}))`
             } else {
-              line = reverse ? `${tagName}({})` : `() => (${tagName}({}))`
+              line = leafsFirst ? `${tagName}({})` : `() => (${tagName}({}))`
             }
           }
         }
@@ -792,7 +796,7 @@ function _transform(tokens, options) {
           .join("")
         addComma()
 
-        lines += reverse ? `${curlyCode}` : `() => (${curlyCode})`
+        lines += leafsFirst ? `${curlyCode}` : `() => (${curlyCode})`
       }
       if (token.type === "HtmlEnd") {
         const tagName = tokens[i]?.htmlStart?.value?.replace(/[<>\/]/g, "")
@@ -826,12 +830,11 @@ function addFragmentFunction(str) {
 export default function convertJsx(str, options) {
   options = options || {}
   if (!options.factory) {
-    options.factory = 'h'
+    options.factory = options?.leafsFirst ? 'h' : 'j'
   }
-  const factory = options?.factory || "h"
   let out
-  if (factory !== "React") {
-    out = replaceReact(str, factory)
+  if (options.factory !== "React") {
+    out = replaceReact(str, options.factory)
   }
   out = transform(out, options)
   // out = addFragmentFunction(out)
