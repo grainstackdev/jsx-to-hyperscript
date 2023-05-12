@@ -53,7 +53,7 @@ const signs = [{ value: "+" }, { value: "-" }]
 
 const renderSign = (props) => {
   return (
-    <span>{props.value}</span>
+    <span {...props}>{props.value}</span>
   )
 }
 
@@ -82,7 +82,7 @@ import {h as h} from "grainbox"
 const signs = [{ value: "+" }, { value: "-" }]
 
 const renderSign = (props) => {
-  return h("span", null, [() => (props.value)])
+  return h("span", props, [() => (props.value)])
 }
 
 const Component = () => h("div", null, [])

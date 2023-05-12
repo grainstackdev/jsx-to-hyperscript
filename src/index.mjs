@@ -624,6 +624,7 @@ function getProps(tokens, options) {
         valueToken.type === "Punctuator" &&
         valueToken.value === "{"
       ) {
+        // For example onClick={
         const propName = token.value
         const endBraceIndex = findCurlyBraceEnd(tokens.slice(i))
         const propValue = tokens
@@ -735,8 +736,7 @@ function _transform(tokens, options) {
               } else {
                 // spread props
                 return `${propsMap.get(key)}`
-              }  
-              
+              }
             })
             .join(", ")}}`
 
@@ -776,7 +776,7 @@ function _transform(tokens, options) {
         const value = token.value.replace(/^\s+/g, "").replace(/\s+$/g, "")
         if (value) {
           addComma()
-          lines += `${JSON.stringify(value)}`
+          lines += `() => (${JSON.stringify(value)})`
         }
       }
       if (
@@ -790,12 +790,14 @@ function _transform(tokens, options) {
         if (index === -1) {
           throw new Error(`Unable to find matching curly brace '}'`)
         }
-        const curlyCode = tokens
+        let curlyCode = tokens
           .slice(i + 1, i + index)
           .map((t) => t.value)
           .join("")
+        if (curlyCode) {
+          curlyCode = transform(curlyCode, options)
+        }
         addComma()
-
         lines += leafsFirst ? `${curlyCode}` : `() => (${curlyCode})`
       }
       if (token.type === "HtmlEnd") {

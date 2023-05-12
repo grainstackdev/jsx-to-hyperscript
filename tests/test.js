@@ -7,8 +7,8 @@ const restAnswer = `const a = (props) => (
   j('div', props, [() => j('span', null, [])])
 )`
 
-const mapAnswer = `j('div', null, [() => (a.map((props) => (<span>{props.value}</span>)))])`
-const mapReverse = `h('div', null, [a.map((props) => (<span>{props.value}</span>))])`
+const mapAnswer = `j('div', null, [() => (a.map((props) => (j('span', props, [() => (props.children)])))), () => (a.map((props) => (j('span', props, [() => (props.children)]))))])`
+const mapReverse = `h('div', null, [a.map((props) => (h('span', props, [props.children]))), a.map((props) => (h('span', props, [props.children])))])`
 
 const fragmentsAnswer = `function renderRow() {
   return (
